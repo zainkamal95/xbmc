@@ -18,6 +18,7 @@
 #include "threads/Event.h"
 #include "threads/SystemClock.h"
 #include "utils/Geometry.h"
+#include "utils/StreamDetails.h"
 #include "windowing/Resolution.h"
 
 #include <atomic>
@@ -95,7 +96,7 @@ public:
 
   int GetSkippedFrames()  { return m_QueueSkip; }
 
-  bool Configure(const VideoPicture& picture, float fps, unsigned int orientation, int buffers = 0);
+  bool Configure(const VideoPicture& picture, float fps, unsigned int orientation, StreamHdrType hdrType, int buffers = 0);
   bool AddVideoPicture(const VideoPicture& picture, volatile std::atomic_bool& bStop, EINTERLACEMETHOD deintMethod, bool wait);
   void AddOverlay(std::shared_ptr<CDVDOverlay> o, double pts);
   void ShowVideo(bool enable);
@@ -209,6 +210,7 @@ protected:
 
   float m_fps = 0.0;
   unsigned int m_orientation = 0;
+  StreamHdrType m_hdrType = StreamHdrType::HDR_TYPE_NONE;
   int m_NumberBuffers = 0;
   int m_lateframes = -1;
   double m_presentpts = 0.0;

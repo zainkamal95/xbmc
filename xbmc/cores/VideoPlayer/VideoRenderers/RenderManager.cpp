@@ -78,7 +78,8 @@ void CRenderManager::SetVideoSettings(const CVideoSettings& settings)
   }
 }
 
-bool CRenderManager::Configure(const VideoPicture& picture, float fps, unsigned int orientation, int buffers)
+bool CRenderManager::Configure(const VideoPicture& picture, float fps, unsigned int orientation,
+  StreamHdrType hdrType, int buffers)
 {
 
   // check if something has changed
@@ -88,8 +89,16 @@ bool CRenderManager::Configure(const VideoPicture& picture, float fps, unsigned 
     if (!m_bRenderGUI)
       return true;
 
-    if (m_picture.IsSameParams(picture) && m_fps == fps && m_orientation == orientation &&
-        m_NumberBuffers == buffers && m_pRenderer != nullptr &&
+    if (m_width == picture.iWidth &&
+        m_height == picture.iHeight &&
+        m_dwidth == picture.iDisplayWidth &&
+        m_dheight == picture.iDisplayHeight &&
+        m_fps == fps &&
+        m_orientation == orientation &&
+        m_hdrType == hdrType &&
+        m_stereomode == picture.stereoMode &&
+        m_NumberBuffers == buffers &&
+        m_pRenderer != nullptr &&
         !m_pRenderer->ConfigChanged(picture))
     {
       return true;
@@ -98,8 +107,8 @@ bool CRenderManager::Configure(const VideoPicture& picture, float fps, unsigned 
 
   CLog::Log(LOGDEBUG,
             "CRenderManager::Configure - change configuration. {}x{}. display: {}x{}. framerate: "
-            "{:4.2f}.",
-            picture.iWidth, picture.iHeight, picture.iDisplayWidth, picture.iDisplayHeight, fps);
+            "{:4.2f} hdrType: {}.",
+            picture.iWidth, picture.iHeight, picture.iDisplayWidth, picture.iDisplayHeight, fps, CStreamDetails::DynamicRangeToString(hdrType));
 
   // make sure any queued frame was fully presented
   {
@@ -124,6 +133,8 @@ bool CRenderManager::Configure(const VideoPicture& picture, float fps, unsigned 
     m_picture.SetParams(picture);
     m_fps = fps;
     m_orientation = orientation;
+    m_hdrType = hdrType;
+    m_stereomode = picture.stereoMode;
     m_NumberBuffers  = buffers;
     m_renderState = STATE_CONFIGURING;
     m_stateEvent.Reset();
@@ -392,6 +403,8 @@ void CRenderManager::UnInit()
   m_renderState = STATE_UNCONFIGURED;
   m_picture.Reset();
   m_bRenderGUI = false;
+  m_hdrType = StreamHdrType::HDR_TYPE_NONE;
+  CServiceBroker::GetWinSystem()->GetGfxContext().SetHDRType(m_hdrType);
   RemoveCaptures();
 
   m_initEvent.Set();
@@ -884,8 +897,8 @@ void CRenderManager::UpdateResolution()
     {
       if (CServiceBroker::GetSettingsComponent()->GetSettings()->GetInt(CSettings::SETTING_VIDEOPLAYER_ADJUSTREFRESHRATE) != ADJUST_REFRESHRATE_OFF && m_fps > 0.0f)
       {
-        RESOLUTION res = CResolutionUtils::ChooseBestResolution(
-            m_fps, m_picture.iWidth, m_picture.iHeight, !m_picture.stereoMode.empty());
+        RESOLUTION res = CResolutionUtils::ChooseBestResolution(m_fps, m_width, m_height, !m_stereomode.empty());
+        CServiceBroker::GetWinSystem()->GetGfxContext().SetHDRType(m_hdrType);
         CServiceBroker::GetWinSystem()->GetGfxContext().SetVideoResolution(res, false);
         UpdateLatencyTweak();
         if (m_pRenderer)
