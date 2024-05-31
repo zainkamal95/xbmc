@@ -41,6 +41,20 @@ enum AML_SUPPORT_H264_4K2K
   AML_HAS_H264_4K2K_SAME_PROFILE
 };
 
+enum DV_MODE : int
+{
+  DV_MODE_ON = 0,
+  DV_MODE_ON_DEMAND,
+  DV_MODE_OFF
+};
+
+enum DV_TYPE : int
+{
+  DV_TYPE_DISPLAY_LED = 0,
+  DV_TYPE_PLAYER_LED_LLDV,
+  DV_TYPE_PLAYER_LED_HDR
+};
+
 #define AML_GXBB    0x1F
 #define AML_GXL     0x21
 #define AML_GXM     0x22
@@ -60,6 +74,11 @@ bool aml_support_vp9();
 bool aml_support_av1();
 bool aml_support_dolby_vision();
 bool aml_dolby_vision_enabled();
+void aml_config_dv_on(unsigned int mode);
+void aml_config_dv_off_1();
+void aml_config_dv_off_2();
+void aml_config_dv_enable(bool enable);
+bool aml_config_is_dv_enable();
 bool aml_has_frac_rate_policy();
 bool aml_video_started();
 void aml_video_mute(bool mute);
