@@ -24,8 +24,10 @@
 #include "settings/DisplaySettings.h"
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
+#include "settings/lib/SettingsManager.h"
 #include "settings/lib/Setting.h"
 #include "guilib/DispResource.h"
+#include "guilib/LocalizeStrings.h"
 #include "utils/AMLUtils.h"
 #include "utils/log.h"
 #include "threads/SingleLock.h"
@@ -37,7 +39,27 @@
 
 #include "system_egl.h"
 
+#define DOLBY_VISION_OUTPUT_MODE_IPT_TUNNEL (unsigned int)(1)
+#define DOLBY_VISION_OUTPUT_MODE_BYPASS     (unsigned int)(5)
+
 using namespace KODI;
+
+void SettingOptionsDolbyVisionTypeFiller(
+    const SettingConstPtr& setting,
+    std::vector<IntegerSettingOption>& list,
+    int& current,
+    void* data)
+{
+  list.clear();
+
+  if (aml_display_support_dv())
+    list.emplace_back(g_localizeStrings.Get(50023), DV_TYPE_DISPLAY_LED); // Display Led (DV-Std)
+  
+  if (aml_dv_support_ll())
+    list.emplace_back(g_localizeStrings.Get(50024), DV_TYPE_PLAYER_LED_LLDV); // Player Led (DV-LL)
+
+  list.emplace_back(g_localizeStrings.Get(50025), DV_TYPE_PLAYER_LED_HDR); // Player Led (HDR)
+}
 
 CWinSystemAmlogic::CWinSystemAmlogic()
 :  m_nativeWindow(NULL)
@@ -65,7 +87,10 @@ CWinSystemAmlogic::CWinSystemAmlogic()
 
 bool CWinSystemAmlogic::InitWindowSystem()
 {
-  const std::shared_ptr<CSettings> settings = CServiceBroker::GetSettingsComponent()->GetSettings();
+  const auto settings = CServiceBroker::GetSettingsComponent()->GetSettings();
+  const auto settingsManager = settings->GetSettingsManager();
+
+  settingsManager->RegisterSettingOptionsFiller("DolbyVisionType", SettingOptionsDolbyVisionTypeFiller);
 
   if (settings->GetBool(CSettings::SETTING_COREELEC_AMLOGIC_NOISEREDUCTION))
   {
@@ -89,35 +114,46 @@ bool CWinSystemAmlogic::InitWindowSystem()
     CSysfsPath("/sys/module/am_vecm/parameters/hdr_mode", 1);
   }
 
-  if (!aml_support_dolby_vision() || !aml_display_support_dv())
-  {
-    auto setting = settings->GetSetting(CSettings::SETTING_COREELEC_AMLOGIC_DV_DISABLE);
-    if (setting)
-    {
-      setting->SetVisible(false);
-      settings->SetBool(CSettings::SETTING_COREELEC_AMLOGIC_DV_DISABLE, false);
-    }
+  bool device_support_dv = aml_support_dolby_vision();
+  bool all_support_dv = (device_support_dv && aml_display_support_dv());
 
-    setting = settings->GetSetting(CSettings::SETTING_COREELEC_AMLOGIC_USE_PLAYERLED);
-    if (setting)
-    {
-      setting->SetVisible(false);
-      settings->SetBool(CSettings::SETTING_COREELEC_AMLOGIC_USE_PLAYERLED, false);
-    }
+  auto setBln = [&](const std::string& id, const bool support, const bool value) {
+    if (auto setting = settings->GetSetting(id)) setting->SetVisible(support);
+    if (!support) settings->SetBool(id, value);
+  };
 
-    setting = settings->GetSetting(CSettings::SETTING_VIDEOPLAYER_CONVERTDOVI);
-    if (setting)
-    {
-      setting->SetVisible(false);
-      settings->SetInt(CSettings::SETTING_VIDEOPLAYER_CONVERTDOVI, 0);
-    }
-  }
-  else if (aml_dv_support_ll())
-  {
-    CLog::Log(LOGDEBUG, "CWinSystemAmlogic::InitWindowSystem -- display do support Dolby Vision Low Latency");
-    auto setting = settings->GetSetting(CSettings::SETTING_COREELEC_AMLOGIC_USE_PLAYERLED);
-    if (setting)
-      setting->SetVisible(true);
+  auto setInt = [&](const std::string& id, const bool support, const int value) {
+    if (auto setting = settings->GetSetting(id)) setting->SetVisible(support);
+    if (!support) settings->SetInt(id, value);
+  };
+
+  auto setStr = [&](const std::string& id, const bool support, const std::string& value) {
+    if (auto setting = settings->GetSetting(id)) setting->SetVisible(support);
+    if (!support) settings->SetString(id, value);
+  };
+
+  setInt(CSettings::SETTING_COREELEC_AMLOGIC_DV_TYPE, device_support_dv, DV_MODE_OFF);
+  setInt(CSettings::SETTING_COREELEC_AMLOGIC_DV_TYPE, device_support_dv, DV_TYPE_PLAYER_LED_HDR);
+  setBln(CSettings::SETTING_COREELEC_AMLOGIC_DV_VSVDB_INJECT, device_support_dv, false);
+  setStr(CSettings::SETTING_COREELEC_AMLOGIC_DV_VSVDB, device_support_dv, "");
+  setInt(CSettings::SETTING_COREELEC_AMLOGIC_DV_COLORIMETRY_FOR_STD, all_support_dv, 0);
+  setInt(CSettings::SETTING_COREELEC_AMLOGIC_DV_VS10_SDR, device_support_dv, DOLBY_VISION_OUTPUT_MODE_BYPASS);
+  setInt(CSettings::SETTING_COREELEC_AMLOGIC_DV_VS10_HDR10, device_support_dv, DOLBY_VISION_OUTPUT_MODE_BYPASS);
+  setInt(CSettings::SETTING_COREELEC_AMLOGIC_DV_VS10_HDR10PLUS, device_support_dv, DOLBY_VISION_OUTPUT_MODE_BYPASS);
+  setInt(CSettings::SETTING_COREELEC_AMLOGIC_DV_VS10_HDRHLG, device_support_dv, DOLBY_VISION_OUTPUT_MODE_BYPASS);
+  setInt(CSettings::SETTING_COREELEC_AMLOGIC_DV_VS10_DV, device_support_dv, DOLBY_VISION_OUTPUT_MODE_BYPASS);
+
+  CSysfsPath("/sys/module/amdolby_vision/parameters/dolby_vision_graphic_max", 100);
+
+  // Turn on dv - if dv mode is on.
+  enum DV_MODE dv_mode(static_cast<DV_MODE>(settings->GetInt(CSettings::SETTING_COREELEC_AMLOGIC_DV_MODE)));
+  if (dv_mode == DV_MODE_ON ) {
+    aml_config_dv_on(DOLBY_VISION_OUTPUT_MODE_IPT_TUNNEL);
+		aml_config_dv_enable(true);
+  } else {
+    aml_config_dv_off_1();
+    aml_config_dv_enable(false);
+    aml_config_dv_off_2();
   }
 
   if (((LINUX_VERSION_CODE >> 16) & 0xFF) < 5)

@@ -291,9 +291,8 @@ typedef struct hdr_buf {
     int size;
 } hdr_buf_t;
 
-#define FLAG_FORCE_DV_LL        (unsigned int)(0x4000)
-#define DOLBY_VISION_LL_DISABLE (unsigned int)(0)
-#define DOLBY_VISION_LL_YUV422  (unsigned int)(1)
+#define DOLBY_VISION_OUTPUT_MODE_IPT_TUNNEL (unsigned int)(1)
+#define DOLBY_VISION_OUTPUT_MODE_BYPASS     (unsigned int)(5)
 
 typedef struct am_packet {
     AVPacket      avpkt;
@@ -1851,7 +1850,7 @@ int CAMLCodec::GetAmlDuration() const
   return am_private ? (am_private->video_rate * PTS_FREQ) / UNIT_FREQ : 0;
 };
 
-bool CAMLCodec::OpenDecoder(CDVDStreamInfo &hints, enum ELType dovi_el_type)
+bool CAMLCodec::OpenDecoder(CDVDStreamInfo &hints, enum ELType dovi_el_type, bool is_hdr10plus)
 {
   m_speed = DVD_PLAYSPEED_NORMAL;
   m_drain = false;
@@ -1974,7 +1973,8 @@ bool CAMLCodec::OpenDecoder(CDVDStreamInfo &hints, enum ELType dovi_el_type)
   std::string hdrType = CStreamDetails::HdrTypeToString(hints.hdrType);
   if (hdrType.size())
     CLog::Log(LOGDEBUG, "CAMLCodec::OpenDecoder hdr type: {}", hdrType);
-
+  if (hints.hdrType == StreamHdrType::HDR_TYPE_HDR10)
+    CLog::Log(LOGDEBUG, "CAMLCodec::OpenDecoder hdr is hdr10plus: {}", is_hdr10plus);
   if (hints.hdrType == StreamHdrType::HDR_TYPE_DOLBYVISION)
     CLog::Log(LOGDEBUG, "CAMLCodec::OpenDecoder DOVI: version {:d}.{:d}, profile {:d}, el type {:d}",
       hints.dovi.dv_version_major, hints.dovi.dv_version_minor, hints.dovi.dv_profile, dovi_el_type);
@@ -1998,36 +1998,58 @@ bool CAMLCodec::OpenDecoder(CDVDStreamInfo &hints, enum ELType dovi_el_type)
   am_private->gcodec.dec_mode    = STREAM_TYPE_FRAME;
   am_private->gcodec.video_path  = FRAME_BASE_PATH_AMLVIDEO_AMVIDEO;
 
-  // enable Dolby Vision driver when 'dovi.ko' is available
-  bool device_support_dv(aml_support_dolby_vision());
-  bool user_dv_disable(CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(CSettings::SETTING_COREELEC_AMLOGIC_DV_DISABLE));
-  bool dv_enable(device_support_dv && !user_dv_disable &&
-    hints.hdrType == StreamHdrType::HDR_TYPE_DOLBYVISION && (aml_display_support_dv() || hints.dovi.dv_profile == 5));
-  CLog::Log(LOGDEBUG, "CAMLCodec::OpenDecoder {}DV support, {}, DV system is {}", device_support_dv ? "" : "no ",
-    user_dv_disable ? "disabled" : "enabled", dv_enable ? "enabled" : "disabled");
+  const auto settings = CServiceBroker::GetSettingsComponent()->GetSettings();
+
+  enum DV_MODE dv_mode(static_cast<DV_MODE>(settings->GetInt(CSettings::SETTING_COREELEC_AMLOGIC_DV_MODE)));
+  enum DV_TYPE dv_type(static_cast<DV_TYPE>(settings->GetInt(CSettings::SETTING_COREELEC_AMLOGIC_DV_TYPE)));
+  bool content_is_dv(hints.hdrType == StreamHdrType::HDR_TYPE_DOLBYVISION);
+
+  unsigned int vs10_sdr_mode((unsigned int)settings->GetInt(CSettings::SETTING_COREELEC_AMLOGIC_DV_VS10_SDR));
+  unsigned int vs10_hdr10_mode((unsigned int)settings->GetInt(CSettings::SETTING_COREELEC_AMLOGIC_DV_VS10_HDR10));
+  unsigned int vs10_hdr10plus_mode((unsigned int)settings->GetInt(CSettings::SETTING_COREELEC_AMLOGIC_DV_VS10_HDR10PLUS));
+  unsigned int vs10_hdrhlg_mode((unsigned int)settings->GetInt(CSettings::SETTING_COREELEC_AMLOGIC_DV_VS10_HDRHLG));
+  unsigned int vs10_dv_mode((unsigned int)settings->GetInt(CSettings::SETTING_COREELEC_AMLOGIC_DV_VS10_DV));
+
+  bool vs10_sdr_on((vs10_sdr_mode < DOLBY_VISION_OUTPUT_MODE_BYPASS) && (hints.hdrType == StreamHdrType::HDR_TYPE_NONE));
+  bool vs10_hdr10_on((vs10_hdr10_mode < DOLBY_VISION_OUTPUT_MODE_BYPASS) && (hints.hdrType == StreamHdrType::HDR_TYPE_HDR10) && !is_hdr10plus);
+  bool vs10_hdr10plus_on((vs10_hdr10plus_mode < DOLBY_VISION_OUTPUT_MODE_BYPASS) && (hints.hdrType == StreamHdrType::HDR_TYPE_HDR10) && is_hdr10plus);
+  bool vs10_hdrhlg_on((vs10_hdrhlg_mode < DOLBY_VISION_OUTPUT_MODE_BYPASS) && (hints.hdrType == StreamHdrType::HDR_TYPE_HLG));
+  bool vs10_dv_on((vs10_dv_mode < DOLBY_VISION_OUTPUT_MODE_BYPASS) && content_is_dv);
+  bool dv_on(vs10_sdr_on || vs10_hdr10_on || vs10_hdr10plus_on || vs10_hdrhlg_on || content_is_dv);
+
+  // dv mode on or dv mode on demand and this is dv/vs10.
+  bool dv_enable((dv_mode == DV_MODE_ON) || ((dv_mode == DV_MODE_ON_DEMAND) && dv_on)) ;
+  CLog::Log(LOGDEBUG, "CAMLCodec::OpenDecoder DV mode [{}],  DV type [{}], DV enable [{}]", dv_mode, dv_type, dv_enable);
+  
   if (dv_enable)
   {
-    // enable Dolby Vision
-    CSysfsPath("/sys/module/amdolby_vision/parameters/dolby_vision_enable", 'Y');
-
-    // force player led mode when enabled
-    CSysfsPath dolby_vision_flags{"/sys/module/amdolby_vision/parameters/dolby_vision_flags"};
-    CSysfsPath dolby_vision_ll_policy{"/sys/module/amdolby_vision/parameters/dolby_vision_ll_policy"};
-    if (dolby_vision_flags.Exists() && dolby_vision_ll_policy.Exists())
-    {
-      if (CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(CSettings::SETTING_COREELEC_AMLOGIC_USE_PLAYERLED))
-      {
-        dolby_vision_flags.Set(dolby_vision_flags.Get<unsigned int>().value() | FLAG_FORCE_DV_LL);
-        dolby_vision_ll_policy.Set(DOLBY_VISION_LL_YUV422);
-      }
-      else
-      {
-        dolby_vision_flags.Set(dolby_vision_flags.Get<unsigned int>().value() & ~(FLAG_FORCE_DV_LL));
-        dolby_vision_ll_policy.Set(DOLBY_VISION_LL_DISABLE);
-      }
+    CLog::Log(LOGDEBUG, "CAMLCodec::OpenDecoder DV type [{}] enabled for [{}]", dv_type, content_is_dv ? "content" : "mapping");
+    
+    // For VS10 set the mode according to the user choice.
+    unsigned int mode(DOLBY_VISION_OUTPUT_MODE_BYPASS);
+    if (vs10_sdr_on) {
+      mode = vs10_sdr_mode;
+    } else if (vs10_hdr10_on) {
+      mode = vs10_hdr10_mode;
+    } else if (vs10_hdr10plus_on) {
+      mode = vs10_hdr10plus_mode;
+    } else if (vs10_hdrhlg_on) {
+      mode = vs10_hdrhlg_mode;
+    } else if (vs10_dv_on) {
+      mode = vs10_dv_mode;
+    } else if (content_is_dv) {
+      mode = DOLBY_VISION_OUTPUT_MODE_IPT_TUNNEL;
     }
 
-    am_private->gcodec.dv_enable = 1;
+    CLog::Log(LOGDEBUG, "CAMLCodec::OpenDecoder VS10 mode:{} enabled", mode);
+
+    aml_config_dv_on(mode);
+
+    if (content_is_dv) {
+      am_private->gcodec.dv_enable = 1;
+      aml_config_dv_enable(true); // enable Dolby Vision
+    }
+
     if ((hints.dovi.dv_profile == 4 || hints.dovi.dv_profile == 7) && CServiceBroker::GetSettingsComponent()->GetSettings()->GetInt(
         CSettings::SETTING_VIDEOPLAYER_CONVERTDOVI) == 0)
     {
@@ -2039,11 +2061,6 @@ bool CAMLCodec::OpenDecoder(CDVDStreamInfo &hints, enum ELType dovi_el_type)
         am_private->gcodec.dec_mode  = STREAM_TYPE_STREAM;
       }
     }
-  }
-  else if (device_support_dv)
-  {
-    // disable Dolby Vision
-    CSysfsPath("/sys/module/amdolby_vision/parameters/dolby_vision_enable", 'N');
   }
 
   // DEC_CONTROL_FLAG_DISABLE_FAST_POC
@@ -2194,6 +2211,9 @@ bool CAMLCodec::OpenDecoder(CDVDStreamInfo &hints, enum ELType dovi_el_type)
   SetSpeed(m_speed);
   SetPollDevice(am_private->vcodec.cntl_handle);
 
+  // Finally enable Dolby Vision after other codec setup - to avoid lockup issues.
+  if (!content_is_dv && dv_enable) aml_config_dv_enable(true);
+
   return true;
 }
 
@@ -2287,6 +2307,11 @@ void CAMLCodec::CloseDecoder()
 {
   CLog::Log(LOGDEBUG, "CAMLCodec::CloseDecoder");
 
+	const auto settings = CServiceBroker::GetSettingsComponent()->GetSettings();
+	enum DV_MODE dv_mode(static_cast<DV_MODE>(settings->GetInt(CSettings::SETTING_COREELEC_AMLOGIC_DV_MODE)));
+
+	if (dv_mode == DV_MODE_ON_DEMAND) aml_config_dv_off_1();
+
   SetPollDevice(-1);
 
   // never leave vcodec ff/rw or paused.
@@ -2305,9 +2330,9 @@ void CAMLCodec::CloseDecoder()
     free(am_private->vcodec.config);
   // return tsync to default so external apps work
   CSysfsPath("/sys/class/tsync/enable", 1);
+
   // disable Dolby Vision driver
-  CSysfsPath dolby_vision_enable{"/sys/module/amdolby_vision/parameters/dolby_vision_enable"};
-  if (dolby_vision_enable.Exists() && StringUtils::EqualsNoCase(dolby_vision_enable.Get<std::string>().value(), "Y"))
+  if (aml_config_is_dv_enable())
   {
     CSysfsPath dv_video_on{"/sys/class/amdolby_vision/dv_video_on"};
     if (dv_video_on.Exists())
@@ -2316,16 +2341,19 @@ void CAMLCodec::CloseDecoder()
       while(dv_video_on.Get<int>().value() == 1 && (std::chrono::system_clock::now() - now) < std::chrono::seconds(m_decoder_timeout))
         usleep(10000); // wait 10ms
     }
-    dolby_vision_enable.Set('N');
+    if (dv_mode == DV_MODE_ON_DEMAND) aml_config_dv_enable(false);
   }
-
-  CSysfsPath amdolby_vision_debug{"/sys/class/amdolby_vision/debug"};
-  if (amdolby_vision_debug.Exists())
-    amdolby_vision_debug.Set("enable_fel 0");
 
   ShowMainVideo(false);
 
   CloseAmlVideo();
+
+  if (dv_mode == DV_MODE_ON_DEMAND) aml_config_dv_off_2();
+
+	if (dv_mode == DV_MODE_ON) { // Incase VS10 is off for the content type.
+		aml_config_dv_on(DOLBY_VISION_OUTPUT_MODE_IPT_TUNNEL);
+		aml_config_dv_enable(true);
+  }
 }
 
 void CAMLCodec::CloseAmlVideo()
