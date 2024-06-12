@@ -24746,7 +24746,7 @@ msgstr ""
 #. "Dolby Vision VS10"
 #: system/settings/settings.xml
 msgctxt "#50060"
-msgid "Dolby Vision VS10 target mode for HLG HDR content."
+msgid "Dolby Vision VS10 target mode for HLG HDR content (processed by VS10 as SDR)."
 msgstr ""
 
 #. "Dolby Vision VS10"
