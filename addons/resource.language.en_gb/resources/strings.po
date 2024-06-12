@@ -24770,23 +24770,17 @@ msgstr ""
 #. "Dolby Vision VS10"
 #: system/settings/settings.xml
 msgctxt "#50064"
-msgid "SDR8"
+msgid "SDR"
 msgstr ""
 
 #. "Dolby Vision VS10" 
 #: system/settings/settings.xml
 msgctxt "#50065"
-msgid "SDR10"
-msgstr ""
-
-#. "Dolby Vision VS10" 
-#: system/settings/settings.xml
-msgctxt "#50066"
 msgid "HDR10"
 msgstr ""
 
 #. "Dolby Vision VS10" 
 #: system/settings/settings.xml
-msgctxt "#50067"
+msgctxt "#50066"
 msgid "Dolby Vision"
 msgstr ""
