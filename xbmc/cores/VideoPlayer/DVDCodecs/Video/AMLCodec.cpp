@@ -2002,7 +2002,7 @@ bool CAMLCodec::OpenDecoder(CDVDStreamInfo &hints, enum ELType dovi_el_type)
   bool dv_requested(false);
   bool content_is_dv(hints.hdrType == StreamHdrType::HDR_TYPE_DOLBYVISION);
 
-    // if DV_MODE_ON (i.e. on in Kodi Menu), then set graphics max to 0 (graphics OSD luminance will be handled by amlogic).
+  // if DV_MODE_ON (i.e. on in Kodi Menu), then set graphics max to 0 (graphics OSD luminance will be handled by amlogic).
   if (dv_mode == DV_MODE_ON) aml_dv_set_osd_max(0);
   
   if (dv_mode == DV_MODE_ON || dv_mode == DV_MODE_ON_DEMAND) {
