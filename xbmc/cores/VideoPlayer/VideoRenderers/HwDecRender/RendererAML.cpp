@@ -64,14 +64,12 @@ bool CRendererAML::Configure(const VideoPicture &picture, float fps, unsigned in
   SetViewMode(m_videoSettings.m_ViewMode);
   ManageRenderArea();
 
-  auto settings = CServiceBroker::GetSettingsComponent()->GetSettings();
-
   // Configure GUI/OSD for HDR PQ when display is in HDR PQ mode
 
   bool hdr_display(CServiceBroker::GetWinSystem()->IsHDRDisplay());
   bool dv_display(aml_display_support_dv() || hdr_display);
   bool device_dv_ready(aml_support_dolby_vision());
-  bool user_dv_disable(settings->GetInt(CSettings::SETTING_COREELEC_AMLOGIC_DV_MODE) == DV_MODE_OFF);
+  bool user_dv_disable(aml_dv_mode() == DV_MODE_OFF);
   bool dv_ready(device_dv_ready && !user_dv_disable);
 
   bool vs10_hdr(false);
