@@ -299,7 +299,7 @@ bool CDVDVideoCodecAmlogic::Open(CDVDStreamInfo &hints, CDVDCodecOptions &option
       // check for hevc-hvcC and convert to h265-annex-b
       if (m_hints.extradata && !m_hints.cryptoSession)
       {
-        if (m_bitstream && aml_support_dolby_vision() && (aml_dv_mode() != DV_MODE_OFF))
+        if (m_bitstream && (aml_dv_mode() != DV_MODE_OFF))
         {
           auto settings = CServiceBroker::GetSettingsComponent()->GetSettings();
           int convertDovi = settings->GetInt(CSettings::SETTING_VIDEOPLAYER_CONVERTDOVI);
