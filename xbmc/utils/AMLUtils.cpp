@@ -13,6 +13,11 @@
 #include <fcntl.h>
 #include <string>
 #include <regex>
+#include <chrono>
+#include <vector>
+#include <numeric>
+#include <cmath>
+#include <algorithm>
 
 #include "AMLUtils.h"
 
@@ -1260,4 +1265,76 @@ bool aml_unset_reg_ignore_alpha()
     }
   }
   return false;
+}
+
+struct FpsData {
+    unsigned int input_fps;
+    unsigned int output_fps;
+    unsigned int drop_fps;
+    std::chrono::steady_clock::time_point timestamp;
+};
+
+std::string aml_video_fps_info()
+{
+    static std::vector<FpsData> fps_history;
+    static const std::chrono::seconds HISTORY_DURATION(1);
+
+    CSysfsPath fps_info{"/sys/class/video/fps_info"};
+    if (fps_info.Exists()) {
+        std::string input = fps_info.Get<std::string>().value();
+        unsigned int input_fps, output_fps, drop_fps;
+
+        std::istringstream iss(input);
+        std::string dummy;
+
+        if (iss.ignore(std::numeric_limits<std::streamsize>::max(), ':') &&
+            iss >> std::hex >> input_fps &&
+            iss.ignore(std::numeric_limits<std::streamsize>::max(), ':') &&
+            iss >> std::hex >> output_fps &&
+            iss.ignore(std::numeric_limits<std::streamsize>::max(), ':') &&
+            iss >> std::hex >> drop_fps) {
+
+            auto now = std::chrono::steady_clock::now();
+            fps_history.push_back({input_fps, output_fps, drop_fps, now});
+
+            // Remove old entries
+            fps_history.erase(
+                std::remove_if(fps_history.begin(), fps_history.end(),
+                    [&now](const FpsData& data) {
+                        return now - data.timestamp > HISTORY_DURATION;
+                    }),
+                fps_history.end()
+            );
+
+            // Calculate averages, ignoring entries where output_fps is 0
+            double avg_input = 0, avg_output = 0, avg_drop = 0;
+            int valid_count = 0;
+
+            for (const auto& data : fps_history) {
+                if (data.output_fps > 0) {
+                    avg_input += data.input_fps;
+                    avg_output += data.output_fps;
+                    avg_drop += data.drop_fps;
+                    valid_count++;
+                }
+            }
+
+            if (valid_count > 0) {
+                avg_input /= valid_count;
+                avg_output /= valid_count;
+                avg_drop /= valid_count;
+
+                // Format the averages
+                std::ostringstream oss;
+                oss << std::fixed << std::setprecision(0) << std::setfill('0')
+                    << std::setw(3) << std::round(avg_input) << " : "
+                    << std::setw(3) << std::round(avg_output) << " : "
+                    << std::setw(3) << std::round(avg_drop);
+
+                return oss.str();
+            }
+        }
+    }
+    
+    return "";
 }
