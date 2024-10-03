@@ -93,6 +93,8 @@ public:
   int GetAudioSampleRate();
   void SetAudioBitsPerSample(int bitsPerSample);
   int GetAudioBitsPerSample();
+  void SetAudioIsDolbyAtmos(bool isDolbyAtmos);
+  bool GetAudioIsDolbyAtmos();
   virtual bool AllowDTSHDDecode();
   virtual bool WantsRawPassthrough() { return false; }
 
@@ -180,6 +182,7 @@ protected:
   std::string m_audioChannels;
   int m_audioSampleRate;
   int m_audioBitsPerSample;
+  bool m_audioIsDolbyAtmos;
   CCriticalSection m_audioCodecSection;
 
   // render info
