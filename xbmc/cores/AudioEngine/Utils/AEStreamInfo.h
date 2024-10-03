@@ -42,6 +42,7 @@ public:
   DataType m_type = STREAM_TYPE_NULL;
   unsigned int m_sampleRate;
   unsigned int m_channels;
+  bool m_isDolbyAtmos = false;
   bool m_dataIsLE = true;
   unsigned int m_dtsPeriod = 0;
   unsigned int m_repeat = 0;
