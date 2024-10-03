@@ -798,10 +798,14 @@ unsigned int CAEStreamParser::SyncTrueHD(uint8_t* data, unsigned int size)
         channel_map = (data[9] << 1) | (data[10] >> 7);
       m_info.m_channels = CAEStreamParser::GetTrueHDChannels(channel_map);
 
+      // Check for Atmos conditions
+      bool isDolbyAtmos = ((m_substreams == 4) && ((data[20] & 0x0F) != 0));
+      m_info.m_isDolbyAtmos = isDolbyAtmos;
+
       if (!m_hasSync)
         CLog::Log(LOGINFO,
-                  "CAEStreamParser::SyncTrueHD - TrueHD stream detected ({} channels, {}Hz)",
-                  m_info.m_channels, m_info.m_sampleRate);
+                  "CAEStreamParser::SyncTrueHD - TrueHD stream detected ({} channels{}, {}Hz)",
+                  m_info.m_channels, isDolbyAtmos ? " + Atmos" : "", m_info.m_sampleRate);
 
       m_hasSync = true;
       m_fsize = length;
