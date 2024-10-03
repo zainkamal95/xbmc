@@ -91,6 +91,8 @@ public:
   int GetAudioSampleRate();
   void SetAudioBitsPerSample(int bitsPerSample);
   int GetAudioBitsPerSample();
+  void SetAudioIsDolbyAtmos(bool isDolbyAtmos);
+  bool GetAudioIsDolbyAtmos();
 
   // content info
 
@@ -255,6 +257,7 @@ protected:
     std::string channels;
     int sampleRate;
     int bitsPerSample;
+    bool isDolbyAtmos;
   } m_playerAudioInfo;
 
   mutable CCriticalSection m_contentSection;

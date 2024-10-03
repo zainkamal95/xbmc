@@ -419,6 +419,20 @@ int CDataCacheCore::GetAudioBitsPerSample()
   return m_playerAudioInfo.bitsPerSample;
 }
 
+void CDataCacheCore::SetAudioIsDolbyAtmos(bool isDolbyAtmos)
+{
+  std::unique_lock<CCriticalSection> lock(m_audioPlayerSection);
+
+  m_playerAudioInfo.isDolbyAtmos = isDolbyAtmos;
+}
+
+bool CDataCacheCore::GetAudioIsDolbyAtmos()
+{
+  std::unique_lock<CCriticalSection> lock(m_audioPlayerSection);
+
+  return m_playerAudioInfo.isDolbyAtmos;
+}
+
 void CDataCacheCore::SetEditList(const std::vector<EDL::Edit>& editList)
 {
   std::unique_lock<CCriticalSection> lock(m_contentSection);
