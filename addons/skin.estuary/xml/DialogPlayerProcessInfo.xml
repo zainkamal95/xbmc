@@ -133,7 +133,7 @@
 			</control>
 			<!-- Player Left -->
 			<control type="grouplist">
-				<left>1000</left>
+				<left>50</left>
 				<top>-204</top>
 				<visible>String.IsEqual(Window(Home).Property(PlayerInfoDialogFocus),5553)</visible>
 				<control type="label">
@@ -349,7 +349,7 @@
 					<width>600</width>
 					<height>40</height>
 					<aligny>bottom</aligny>
-					<label>$INFO[System.CpuFrequency,[COLOR button_focus]$LOCALIZE[31631]:[/COLOR] ] [COLOR grey]|[/COLOR] $INFO[System.CPUTemperature]°C</label>
+					<label>$INFO[System.CpuFrequency,[COLOR button_focus]$LOCALIZE[31631]:[/COLOR] ] [COLOR grey]|[/COLOR] $INFO[System.CPUTemperature]</label>
 					<font>font12</font>
 					<shadowcolor>black</shadowcolor>
 				</control>
