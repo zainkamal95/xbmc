@@ -788,6 +788,11 @@ unsigned int CAEStreamParser::SyncTrueHD(uint8_t* data, unsigned int size)
       if (((data[4 + major_sync_size - 1] << 8) | data[4 + major_sync_size - 2]) != crc)
         continue;
 
+      // extract bit depth
+      int bitDepth = 16 + (data[3] >> 3);
+      if (bitDepth > 24) bitDepth = 24;
+      m_info.m_bitDepth = bitDepth;  
+      
       // get the sample rate and substreams, we have a valid master audio unit
       m_info.m_sampleRate = (rate & 0x8 ? 44100 : 48000) << (rate & 0x7);
       m_substreams = (data[20] & 0xF0) >> 4;
@@ -798,14 +803,13 @@ unsigned int CAEStreamParser::SyncTrueHD(uint8_t* data, unsigned int size)
         channel_map = (data[9] << 1) | (data[10] >> 7);
       m_info.m_channels = CAEStreamParser::GetTrueHDChannels(channel_map);
 
-      // Check for Atmos conditions
-      bool isDolbyAtmos = ((m_substreams == 4) && ((data[20] & 0x0F) != 0));
-      m_info.m_isDolbyAtmos = isDolbyAtmos;
+      // check for Atmos
+      m_info.m_isDolbyAtmos = ((m_substreams == 4) && ((data[20] & 0x0F) != 0));
 
       if (!m_hasSync)
         CLog::Log(LOGINFO,
-                  "CAEStreamParser::SyncTrueHD - TrueHD stream detected ({} channels{}, {}Hz)",
-                  m_info.m_channels, isDolbyAtmos ? " + Atmos" : "", m_info.m_sampleRate);
+                  "CAEStreamParser::SyncTrueHD - TrueHD stream detected ({} channels{}, {}Hz, {}-bit)",
+                  m_info.m_channels, m_info.m_isDolbyAtmos ? " + Atmos" : "", m_info.m_sampleRate, m_info.m_bitDepth);
 
       m_hasSync = true;
       m_fsize = length;
