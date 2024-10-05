@@ -225,11 +225,11 @@ bool CPlayerGUIInfo::InitCurrentItem(CFileItem *item)
 
 std::string HdrTypeToString(StreamHdrType hdrType) {
   switch (hdrType) {
-    case StreamHdrType::HDR_TYPE_NONE: return "sdr";
-    case StreamHdrType::HDR_TYPE_HDR10: return "hdr10";
-    case StreamHdrType::HDR_TYPE_HDR10PLUS: return "hdr10+";
-    case StreamHdrType::HDR_TYPE_DOLBYVISION: return "dolby vision";
-    case StreamHdrType::HDR_TYPE_HLG: return "hlg hdr";
+    case StreamHdrType::HDR_TYPE_NONE: return "SDR";
+    case StreamHdrType::HDR_TYPE_HDR10: return "HDR10";
+    case StreamHdrType::HDR_TYPE_HDR10PLUS: return "HDR10+";
+    case StreamHdrType::HDR_TYPE_DOLBYVISION: return "Dolby Vision";
+    case StreamHdrType::HDR_TYPE_HLG: return "HLG HDR";
   }
   return "";
 }
@@ -452,15 +452,6 @@ bool CPlayerGUIInfo::GetLabel(std::string& value, const CFileItem *item, int con
     case PLAYER_PROCESS_AUDIOBITSPERSAMPLE:
       value = StringUtils::FormatNumber(CServiceBroker::GetDataCacheCore().GetAudioBitsPerSample());
       return true;
-    case PLAYER_PROCESS_AML_PIXELFORMAT:
-      value = GetAMLConfigInfo("Colour depth") + ", " + GetAMLConfigInfo("Colourspace");
-      return true;
-    case PLAYER_PROCESS_AML_DISPLAYMODE:
-      value =  GetAMLConfigInfo("VIC");
-      return true;
-    case PLAYER_PROCESS_AML_EOFT_GAMUT:
-      value = GetAMLConfigInfo("EOTF") + " " + GetAMLConfigInfo("Colourimetry");
-      return true;
     case PLAYER_PROCESS_VIDEO_BIT_DEPTH:
       value = StringUtils::FormatNumber(CServiceBroker::GetDataCacheCore().GetVideoBitDepth());
       return true;
@@ -469,6 +460,12 @@ bool CPlayerGUIInfo::GetLabel(std::string& value, const CFileItem *item, int con
       return true;
     case PLAYER_PROCESS_VIDEO_SOURCE_HDR_TYPE:
       value = HdrTypeToString(CServiceBroker::GetDataCacheCore().GetVideoSourceHdrType());
+      return true;
+    case PLAYER_PROCESS_VIDEO_WIDTH_RAW:
+      value = std::to_string(CServiceBroker::GetDataCacheCore().GetVideoWidth());
+      return true;
+    case PLAYER_PROCESS_VIDEO_HEIGHT_RAW:
+      value = std::to_string(CServiceBroker::GetDataCacheCore().GetVideoHeight());
       return true;
     case PLAYER_PROCESS_VIDEO_COLOR_SPACE:
       value = av_color_space_name(CServiceBroker::GetDataCacheCore().GetVideoColorSpace());;
@@ -515,11 +512,26 @@ bool CPlayerGUIInfo::GetLabel(std::string& value, const CFileItem *item, int con
     case PLAYER_PROCESS_VIDEO_DOVI_CODEC_STRING:
       value = VideoDoViCodecString();
       return true;
+    case PLAYER_PROCESS_AML_PIXELFORMAT:
+      value = GetAMLConfigInfo("Colour depth") + ", " + GetAMLConfigInfo("Colourspace");
+      return true;
+    case PLAYER_PROCESS_AML_DISPLAYMODE:
+      value =  GetAMLConfigInfo("VIC");
+      return true;
+    case PLAYER_PROCESS_AML_EOFT_GAMUT:
+      value = GetAMLConfigInfo("EOTF") + " " + GetAMLConfigInfo("Colourimetry");
+      return true;
     case PLAYER_PROCESS_AML_VS10_MODE:
       value = VS10ModeToString(aml_dv_dolby_vision_mode());
       return true;
+    case PLAYER_PROCESS_AML_VS10_MODE_RAW:
+      value = std::to_string(aml_dv_dolby_vision_mode());
+      return true;
     case PLAYER_PROCESS_AML_VIDEO_FPS_INFO:
       value = aml_video_fps_info();
+      return true;
+    case PLAYER_PROCESS_AML_VIDEO_FPS_DROP:
+      value = aml_video_fps_drop();
       return true;
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
