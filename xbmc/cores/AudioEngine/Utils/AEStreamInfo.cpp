@@ -12,18 +12,27 @@
 
 #include <algorithm>
 #include <string.h>
+#include <iomanip>
+#include <sstream>
+
+// DTS_SYNCWORD_SUBSTREAM_CORE 0x02b09261
+
+// DTS_SYNCWORD_SUBSTREAM_CORE, which is located in the extension substream, has a sync word that is
+// remapped from 0x7ffe8001 to 0x02b09261. This makes the core substream synchronization simpler and more robust.
+// When this backward compatible core component is to be delivered to a legacy DTS decoders, (e.g. via SPDIF), its sync
+// word needs to be restored from 0x02b09261 to 0x7ffe8001 prior to the transmission to the legacy decoders. 
 
 #define DTS_PREAMBLE_14BE 0x1FFFE800
 #define DTS_PREAMBLE_14LE 0xFF1F00E8
-#define DTS_PREAMBLE_16BE 0x7FFE8001
+#define DTS_PREAMBLE_16BE 0x7FFE8001  // DTS_SYNCWORD_CORE (Core Substream)
 #define DTS_PREAMBLE_16LE 0xFE7F0180
-#define DTS_PREAMBLE_HD 0x64582025
-#define DTS_PREAMBLE_XCH 0x5a5a5a5a
-#define DTS_PREAMBLE_XXCH 0x47004a03
-#define DTS_PREAMBLE_X96K 0x1d95f262
-#define DTS_PREAMBLE_XBR 0x655e315e
-#define DTS_PREAMBLE_LBR 0x0a801921
-#define DTS_PREAMBLE_XLL 0x41a29547
+#define DTS_PREAMBLE_HD 0x64582025    // DTS_SYNCWORD_SUBSTREAM (Extention Subsystem)
+#define DTS_PREAMBLE_XCH 0x5a5a5a5a   // DTS_SYNCWORD_XCH
+#define DTS_PREAMBLE_XXCH 0x47004a03  // DTS_SYNCWORD_XXCH
+#define DTS_PREAMBLE_X96K 0x1d95f262  // DTS_SYNCWORD_X96
+#define DTS_PREAMBLE_XBR 0x655e315e   // DTS_SYNCWORD_XBR
+#define DTS_PREAMBLE_LBR 0x0a801921   // DTS_SYNCWORD_LBR
+#define DTS_PREAMBLE_XLL 0x41a29547   // DTS_SYNCWORD_XLL
 #define DTS_SFREQ_COUNT 16
 #define MAX_EAC3_BLOCKS 6
 #define UNKNOWN_DTS_EXTENSION 255
@@ -502,7 +511,6 @@ unsigned int CAEStreamParser::SyncDTS(uint8_t* data, unsigned int size)
   for (; size - skip > 13; ++skip, ++data)
   {
     unsigned int header = data[0] << 24 | data[1] << 16 | data[2] << 8 | data[3];
-    unsigned int hd_sync = 0;
     unsigned int dtsBlocks;
     unsigned int amode;
     unsigned int sfreq;
@@ -617,11 +625,18 @@ unsigned int CAEStreamParser::SyncDTS(uint8_t* data, unsigned int size)
       return skip;
     }
 
-    // look for DTS-HD
-    hd_sync = (data[m_fsize] << 24) | (data[m_fsize + 1] << 16) | (data[m_fsize + 2] << 8) |
-              data[m_fsize + 3];
-    if (hd_sync == DTS_PREAMBLE_HD)
+    // Check for a Stream Extention after the core frame.
+    unsigned int substream_sync = (data[m_fsize] << 24) | (data[m_fsize + 1] << 16) | (data[m_fsize + 2] << 8) | data[m_fsize + 3];
+    unsigned int hd_sync = 0;
+
+    // Have a Stream Extention.
+    if (substream_sync == DTS_PREAMBLE_HD)
     {
+
+      // Reference fro DTS-HD and DTS-UHD (aka DTS:X)
+      // https://www.etsi.org/deliver/etsi_ts/102100_102199/102114/01.06.01_60/ts_102114v010601p.pdf
+      // https://www.etsi.org/deliver/etsi_ts/103400_103499/103491/01.02.01_60/ts_103491v010201p.pdf
+
       int hd_size;
       bool blownup = (data[m_fsize + 5] & 0x20) != 0;
       if (blownup)
@@ -656,8 +671,45 @@ unsigned int CAEStreamParser::SyncDTS(uint8_t* data, unsigned int size)
 
       m_coreSize = m_fsize;
       m_fsize += hd_size;
-    }
 
+      // If XLL aka DTS-HD Master Audio - Work out the bit depth
+      if (hd_sync == DTS_PREAMBLE_XLL)
+      {
+
+        int bitPosition = 0;
+        const uint8_t* hdBuffer = &data[m_coreSize + header_size];
+
+        auto ExtractBits = [&](int numBits) -> int {
+            int result = 0;
+            for (int i = 0; i < numBits; ++i)
+            {
+                int byteIndex = bitPosition / 8;
+                int bitIndex = 7 - (bitPosition % 8);
+                result = (result << 1) | ((hdBuffer[byteIndex] >> bitIndex) & 1);
+                bitPosition++;
+            }
+            return result;
+        };
+
+        bitPosition = 32;  // Fast forward through bits to start after sync word
+
+        // Common Header
+        int nVersion = ExtractBits(4) + 1;     // Version is 4 bits, add 1 to get actual version
+        int nHeaderSize = ExtractBits(8) + 1;  // Header size is 8 bits, add 1 to get actual size (size is in bytes)
+
+        // Now go back and find the offset to the first channel set sub header given the header size (in bytes).
+        bitPosition = (nHeaderSize * 8);
+
+        // Parse first Channel Set Sub-Header
+        int nSubHeaderSize = ExtractBits(10) + 1;   // Unpack the header size
+        int m_nChSetLLChannel = ExtractBits(4) + 1; // Extract the number of channels
+        bitPosition += m_nChSetLLChannel;           // Skip Channels as bits!
+        int m_nBitResolution = ExtractBits(5) + 1;  // Extract the input sample bit resolution (bit depth)
+
+        m_info.m_bitDepth = m_nBitResolution;
+      }
+    }
+    
     unsigned int sampleRate = DTSSampleRates[sfreq];
     if (!m_hasSync || skip || dataType != m_info.m_type || sampleRate != m_info.m_sampleRate ||
         dtsBlocks != m_dtsBlocks)
@@ -724,7 +776,7 @@ unsigned int CAEStreamParser::SyncDTS(uint8_t* data, unsigned int size)
       CLog::Log(LOGINFO,
                 "CAEStreamParser::SyncDTS - {} stream detected ({} channels, {}Hz, {}bit {}, "
                 "period: {}, syncword: 0x{:x}, target rate: 0x{:x}, framesize {}))",
-                type, m_info.m_channels, m_info.m_sampleRate, bits, m_info.m_dataIsLE ? "LE" : "BE",
+                type, m_info.m_channels, m_info.m_sampleRate, m_info.m_bitDepth, m_info.m_dataIsLE ? "LE" : "BE",
                 m_info.m_dtsPeriod, hd_sync, target_rate, m_fsize);
     }
 
