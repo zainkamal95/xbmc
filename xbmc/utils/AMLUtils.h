@@ -114,6 +114,7 @@ void aml_dv_close();
 void aml_dv_set_osd_max(int max);
 bool aml_is_dv_enable();
 void aml_dv_display_trigger();
+void aml_dv_display_auto_now();
 void aml_dv_start();
 unsigned int aml_vs10_by_setting(const std::string setting);
 enum DV_MODE aml_dv_mode();
