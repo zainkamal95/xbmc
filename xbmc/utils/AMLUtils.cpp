@@ -543,8 +543,10 @@ unsigned int aml_dv_on(unsigned int mode)
     if ((mode = DOLBY_VISION_OUTPUT_MODE_IPT_TUNNEL) && (dv_type == DV_TYPE_DISPLAY_LED))
       aml_dv_wait_dv_std_vsif_packet();
 
-    if ((mode = DOLBY_VISION_OUTPUT_MODE_IPT_TUNNEL) || (mode = DOLBY_VISION_OUTPUT_MODE_IPT)) 
-      aml_dv_trigger_update_resolution(StreamHdrType::HDR_TYPE_DOLBYVISION);
+    if ((mode = DOLBY_VISION_OUTPUT_MODE_IPT_TUNNEL) || (mode = DOLBY_VISION_OUTPUT_MODE_IPT)) {
+      //aml_dv_trigger_update_resolution(StreamHdrType::HDR_TYPE_DOLBYVISION); // TODO - If display auto now works maybe integrate in logic under this?
+      aml_dv_display_auto_now();
+    }
   }
 
   return mode;
@@ -614,6 +616,13 @@ void aml_dv_display_trigger()
     CSysfsPath display_mode{"/sys/class/display/mode"};
     if (display_mode.Exists()) display_mode.Set(display_mode.Get<std::string>().value());
   }
+}
+
+void aml_dv_display_auto_now()
+{
+  // hdmi tx store attr "now" - will trigger set_disp_mode_auto. 
+  CSysfsPath attr{"/sys/class/amhdmitx/amhdmitx0/attr"};
+  if (attr.Exists()) attr.Set("now");
 }
 
 void aml_dv_start()
