@@ -45,6 +45,8 @@ public:
   float GetVideoFps();
   void SetVideoDAR(float dar);
   float GetVideoDAR();
+  void SetVideoLiveBitRate(double bitRate);
+  double GetVideoLiveBitRate();
 
   /*!
    * @brief Set if the video is interlaced in cache.
@@ -211,6 +213,7 @@ protected:
     float fps;
     float dar;
     bool m_isInterlaced;
+    double liveBitRate;
   } m_playerVideoInfo;
 
   CCriticalSection m_audioPlayerSection;
