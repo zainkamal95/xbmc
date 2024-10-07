@@ -70,6 +70,8 @@ public:
   int GetAudioSampleRate();
   void SetAudioBitsPerSample(int bitsPerSample);
   int GetAudioBitsPerSample();
+  void SetAudioLiveBitRate(double bitRate);
+  double GetAudioLiveBitRate();
   virtual bool AllowDTSHDDecode();
   virtual bool WantsRawPassthrough() { return false; }
 
@@ -146,6 +148,7 @@ protected:
   std::string m_audioChannels;
   int m_audioSampleRate;
   int m_audioBitsPerSample;
+  double m_audioLiveBitRate;
   CCriticalSection m_audioCodecSection;
 
   // render info

@@ -330,6 +330,7 @@ void CProcessInfo::ResetAudioCodecInfo()
   m_audioChannels = "unknown";
   m_audioSampleRate = 0;;
   m_audioBitsPerSample = 0;
+  m_audioLiveBitRate = 0;
 
   if (m_dataCache)
   {
@@ -337,6 +338,7 @@ void CProcessInfo::ResetAudioCodecInfo()
     m_dataCache->SetAudioChannels(m_audioChannels);
     m_dataCache->SetAudioSampleRate(m_audioSampleRate);
     m_dataCache->SetAudioBitsPerSample(m_audioBitsPerSample);
+    m_dataCache->SetAudioLiveBitRate(m_audioLiveBitRate);
   }
 }
 
@@ -406,6 +408,23 @@ int CProcessInfo::GetAudioBitsPerSample()
   std::unique_lock<CCriticalSection> lock(m_audioCodecSection);
 
   return m_audioBitsPerSample;
+}
+
+void CProcessInfo::SetAudioLiveBitRate(double bitRate)
+{
+  std::unique_lock<CCriticalSection> lock(m_audioCodecSection);
+
+  m_audioLiveBitRate = bitRate;
+
+  if (m_dataCache)
+    m_dataCache->SetAudioLiveBitRate(m_audioLiveBitRate);
+}
+
+double CProcessInfo::GetAudioLiveBitRate()
+{
+  std::unique_lock<CCriticalSection> lock(m_audioCodecSection);
+
+  return m_audioLiveBitRate;
 }
 
 bool CProcessInfo::AllowDTSHDDecode()
