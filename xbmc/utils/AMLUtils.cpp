@@ -1279,92 +1279,78 @@ bool aml_unset_reg_ignore_alpha()
 struct FpsData {
   unsigned int input_fps;
   unsigned int output_fps;
-  unsigned int drop_fps;
   std::chrono::steady_clock::time_point timestamp;
 };
 
 struct FpsInfo {
-  double avg_input;
-  double avg_output;
-  double avg_drop;
-  bool is_dropping;
-  int dropped_fps;
+  unsigned int avg_input_fps;
+  unsigned int avg_output_fps;
+  unsigned int avg_drop_fps;
 };
-
-FpsInfo gather_fps_data() {
-  
-  static std::vector<FpsData> fps_history;
-  static const std::chrono::seconds HISTORY_DURATION(1);
-  static int last_output_fps = 0;
-  static std::chrono::steady_clock::time_point last_fps_drop = std::chrono::steady_clock::now();
-
-  CSysfsPath fps_info{"/sys/class/video/fps_info"};
-  if (fps_info.Exists()) {
-    std::string input = fps_info.Get<std::string>().value();
-    unsigned int input_fps, output_fps, drop_fps;
-
-    std::istringstream iss(input);
-
-    if (iss.ignore(std::numeric_limits<std::streamsize>::max(), ':') &&
-        iss >> std::hex >> input_fps &&
-        iss.ignore(std::numeric_limits<std::streamsize>::max(), ':') &&
-        iss >> std::hex >> output_fps &&
-        iss.ignore(std::numeric_limits<std::streamsize>::max(), ':') &&
-        iss >> std::hex >> drop_fps) {
-
-      auto now = std::chrono::steady_clock::now();
-      fps_history.push_back({input_fps, output_fps, drop_fps, now});
-
-      // Remove old entries
-      fps_history.erase(
-        std::remove_if(fps_history.begin(), fps_history.end(),
-          [&now](const FpsData& data) {
-            return now - data.timestamp > HISTORY_DURATION;
-          }),
-        fps_history.end()
-      );
-
-      // Calculate averages, ignoring entries where output_fps is 0
-      double avg_input = 0, avg_output = 0, avg_drop = 0;
-      int valid_count = 0;
-
-      for (const auto& data : fps_history) {
-        if (data.output_fps > 0) {
-          avg_input += data.input_fps;
-          avg_output += data.output_fps;
-          avg_drop += data.drop_fps;
-          valid_count++;
-        }
-      }
-
-      if (valid_count > 0) {
-        avg_input /= valid_count;
-        avg_output /= valid_count;
-        avg_drop /= valid_count;
-
-        int rounded_input_fps = std::round(avg_input);
-        int rounded_output_fps = std::round(avg_output);
-        bool is_dropping = rounded_output_fps < rounded_input_fps;
-
-        int dropped_fps = 0;
-        if (rounded_output_fps != last_output_fps && is_dropping) {
-          dropped_fps = rounded_output_fps;
-          last_fps_drop = now;
-        }
-        last_output_fps = rounded_output_fps;
-
-        return {avg_input, avg_output, avg_drop, is_dropping, dropped_fps};
-      }
-    }
-  }
-  
-  return {0, 0, 0, false, 0};
-}
 
 struct FormattedFpsInfo {
   std::string basic_info;
   std::string drop_info;
 };
+
+FpsInfo gather_fps_data() {
+
+  static std::vector<FpsData> fps_history;
+  static const std::chrono::seconds HISTORY_DURATION(1);
+
+  CSysfsPath fps_info{"/sys/class/video/fps_info"};
+  if (fps_info.Exists()) {
+
+    std::string input = fps_info.Get<std::string>().value();
+    unsigned int input_fps, output_fps;
+    std::istringstream iss(input);
+
+    if ((iss.ignore(std::numeric_limits<std::streamsize>::max(), ':') && iss >> std::hex >> input_fps) &&
+        (iss.ignore(std::numeric_limits<std::streamsize>::max(), ':') && iss >> std::hex >> output_fps)) {
+        
+      // Add new entry
+      auto now = std::chrono::steady_clock::now();
+      fps_history.push_back({input_fps, output_fps, now});
+
+      // Remove old entries
+      fps_history.erase(
+        std::remove_if(
+            fps_history.begin(), fps_history.end(), 
+            [&now](const FpsData& data) {
+              return (now - data.timestamp) > HISTORY_DURATION;
+            }
+          ), fps_history.end()
+      );
+
+      // Calculate averages
+      double avg_input_fps = 0;
+      double avg_output_fps = 0;
+      double avg_drop_fps = 0;
+
+      unsigned int valid_count = 0;
+
+      for (const auto& data : fps_history) {
+        avg_input_fps += data.input_fps;
+        avg_output_fps += data.output_fps;
+        valid_count++;
+      }
+
+      if (valid_count > 0) {
+        avg_input_fps /= valid_count;
+        avg_output_fps /= valid_count;
+        avg_drop_fps = avg_input_fps - avg_output_fps;
+
+        return {
+          static_cast<unsigned int>(avg_input_fps + 0.5),
+          static_cast<unsigned int>(avg_output_fps + 0.5),
+          static_cast<unsigned int>(avg_drop_fps + 0.5)
+        };
+      }
+    }
+  }
+
+  return {0, 0, 0};
+}
 
 FormattedFpsInfo format_fps_info() {
 
@@ -1372,18 +1358,19 @@ FormattedFpsInfo format_fps_info() {
 
   // Format basic info
   static int rotation_index = 0;
-  static std::chrono::steady_clock::time_point last_update = std::chrono::steady_clock::now();
   const char rotation_chars[] = {'|', '/', '-', '\\'};
+
+  static std::chrono::steady_clock::time_point last_update = std::chrono::steady_clock::now();
   const std::chrono::milliseconds UPDATE_INTERVAL(100);
 
   std::ostringstream basic_info;
   basic_info << std::fixed << std::setprecision(0) << std::setfill('0')
-              << std::setw(3) << std::round(info.avg_input) << " - "
-              << std::setw(3) << std::round(info.avg_output) << " - "
-              << std::setw(3) << std::round(info.avg_drop);
+              << std::setw(3) << info.avg_input_fps << " - "
+              << std::setw(3) << info.avg_output_fps << " - "
+              << std::setw(3) << info.avg_drop_fps;
 
   auto now = std::chrono::steady_clock::now();
-  if (now - last_update >= UPDATE_INTERVAL) {
+  if ((now - last_update) >= UPDATE_INTERVAL) {
     rotation_index = (rotation_index + 1) % 4;
     last_update = now;
   }
@@ -1391,18 +1378,25 @@ FormattedFpsInfo format_fps_info() {
   basic_info << " " << rotation_chars[rotation_index];
 
   // Format drop info
-  static std::chrono::steady_clock::time_point last_fps_drop = std::chrono::steady_clock::now();
-  static int last_non_zero_dropped_fps = 0;
-  const std::chrono::seconds FPS_DROP_INDICATOR_DURATION(3);
+  static unsigned int lowest_avg_output_fps = 0;
+  static std::chrono::steady_clock::time_point last_drop_time;
+  const std::chrono::seconds HOLD_PERIOD(3);
+  static std::string drop_info = "";
 
-  std::string drop_info;
-
-  if (info.is_dropping || now - last_fps_drop < FPS_DROP_INDICATOR_DURATION) {
-    if (info.dropped_fps != 0) {
-      last_non_zero_dropped_fps = info.dropped_fps;
-      last_fps_drop = now;
-    }
-    drop_info = std::to_string(last_non_zero_dropped_fps);
+  if (info.avg_output_fps < info.avg_input_fps) {
+      if (lowest_avg_output_fps == 0 || info.avg_output_fps < lowest_avg_output_fps) {
+          lowest_avg_output_fps = info.avg_output_fps;
+          last_drop_time = now;
+      } else if (now - last_drop_time >= HOLD_PERIOD) {
+          lowest_avg_output_fps = info.avg_output_fps;
+          last_drop_time = now;
+      }
+      drop_info = std::to_string(lowest_avg_output_fps);
+  } else {
+      if (lowest_avg_output_fps != 0 && now - last_drop_time >= HOLD_PERIOD) {
+          lowest_avg_output_fps = 0;
+          drop_info = "";
+      }
   }
 
   return {basic_info.str(), drop_info};
