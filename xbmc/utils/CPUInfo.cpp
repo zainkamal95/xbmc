@@ -78,10 +78,15 @@ std::string CCPUInfo::GetCoresUsageAltString()
       {
         if (!isFirst) strCores += " [COLOR FF404040]|[/COLOR] "; 
         else isFirst = false;
-        
-        (core.m_usagePercent < 100) 
-          ? strCores += StringUtils::Format("{:02d}", static_cast<int>(std::min(99.99, core.m_usagePercent))) 
-          : strCores += "**";
+
+        unsigned int cpu_percent = static_cast<unsigned int>(std::min(99.99, core.m_usagePercent));
+
+        if (cpu_percent == 0) 
+          strCores += "[COLOR FF404040]00[/COLOR]";
+        else if (cpu_percent < 100) 
+          strCores += StringUtils::Format("{:02d}", cpu_percent);
+        else 
+          strCores += "[COLOR=FFFF0000]**[/COLOR]";
       }
     }
     else
