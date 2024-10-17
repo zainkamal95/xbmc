@@ -578,6 +578,9 @@ bool CVideoGUIInfo::GetLabel(std::string& value, const CFileItem *item, int cont
       value = m_subtitleInfo.language;
       return true;
       break;
+    case VIDEOPLAYER_SUBTITLES_NAME:
+      value = m_subtitleInfo.name;
+      return true;
     case VIDEOPLAYER_COVER:
       if (m_appPlayer->IsPlayingVideo())
       {
@@ -645,6 +648,9 @@ bool CVideoGUIInfo::GetLabel(std::string& value, const CFileItem *item, int cont
     }
     case VIDEOPLAYER_AUDIO_LANG:
       value = m_audioInfo.language;
+      return true;
+    case VIDEOPLAYER_AUDIO_NAME:
+      value = m_audioInfo.name;
       return true;
   }
 
