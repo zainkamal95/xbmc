@@ -493,7 +493,7 @@ bool CPlayerGUIInfo::GetLabel(std::string& value, const CFileItem *item, int con
       value = std::to_string(CServiceBroker::GetDataCacheCore().GetAudioLiveBitRate());
       return true;
     case PLAYER_PROCESS_AUDIO_LIVE_KIBIT_RATE:
-      value = StringUtils::FormatNumber(CServiceBroker::GetDataCacheCore().GetAudioLiveBitRate() / 1024);
+      value = StringUtils::FormatNumberNoDecimal(CServiceBroker::GetDataCacheCore().GetAudioLiveBitRate() / 1024);
       return true;
     case PLAYER_PROCESS_AUDIO_LIVE_MIBIT_RATE:
       value = StringUtils::FormatNumber(CServiceBroker::GetDataCacheCore().GetAudioLiveBitRate() / 1048576);
@@ -508,7 +508,7 @@ bool CPlayerGUIInfo::GetLabel(std::string& value, const CFileItem *item, int con
       value = std::to_string(CServiceBroker::GetDataCacheCore().GetVideoLiveBitRate());
       return true;
     case PLAYER_PROCESS_VIDEO_LIVE_KIBIT_RATE:
-      value = StringUtils::FormatNumber(CServiceBroker::GetDataCacheCore().GetVideoLiveBitRate() / 1024);
+      value = StringUtils::FormatNumberNoDecimal(CServiceBroker::GetDataCacheCore().GetVideoLiveBitRate() / 1024);
       return true;
     case PLAYER_PROCESS_VIDEO_LIVE_MIBIT_RATE:
       value = StringUtils::FormatNumber(CServiceBroker::GetDataCacheCore().GetVideoLiveBitRate() / 1048576);
