@@ -98,6 +98,7 @@ private:
   unsigned int m_fsize = 0;
   int m_substreams = 0;       /* used for TrueHD  */
   AVCRC m_crcTrueHD[1024];  /* TrueHD crc table */
+  unsigned int m_eac3DolbyAtmosCheckCount = 0; // Dolby EAC3 - Check for Atmos Count.
 
   void GetPacket(uint8_t **buffer, unsigned int *bufferSize);
   unsigned int DetectType(uint8_t *data, unsigned int size);
