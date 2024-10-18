@@ -308,11 +308,96 @@ unsigned int CAEStreamParser::DetectType(uint8_t* data, unsigned int size)
   return possible ? possible : skipped;
 }
 
+bool hasEAC3JOC(const uint8_t* buffer, size_t size) {
+
+  size_t bitIndex = 40; // Start after the first 5 bytes
+
+  auto readBits = [&](int numBits) -> uint32_t {
+    uint32_t result = 0;
+    for (int i = 0; i < numBits; ++i) {
+      if (bitIndex / 8 >= size) return 0; // Buffer overrun protection
+      result = (result << 1) | ((static_cast<uint8_t>(buffer[bitIndex / 8]) >> (7 - (bitIndex % 8))) & 1);
+      ++bitIndex;
+    }
+    return result;
+  };
+
+  auto skipBits = [&](int numBits) {
+    bitIndex += numBits;
+  };
+
+  // Skip frame_type, substreamid, frame_size, srcode 
+  skipBits(34);
+  
+  uint32_t channelMode = readBits(3);
+
+  // Skip lfeOn, bsid, dialnorm
+  skipBits(11);
+
+  if (readBits(1)) skipBits(8);
+  if (channelMode == 0) {
+    skipBits(5);
+    if (readBits(1)) skipBits(8);
+  }
+
+  // Search for EMDF sync
+  bool emdfFound = false;
+  while (bitIndex / 8 < size - 2) {
+    uint16_t emdfSync = (readBits(8) << 8) | readBits(8);
+    if (emdfSync == 0x5838) {
+      emdfFound = true;
+      break;
+    }
+    bitIndex -= 15;
+  }
+
+  if (!emdfFound) return false;
+
+  skipBits(16); // emdf_container_size
+
+  uint32_t emdfVersion = readBits(2);
+  if (emdfVersion == 3) emdfVersion += readBits(2);
+
+  if (emdfVersion > 0) return false;
+
+  if (readBits(3) == 7) skipBits(2);
+
+  while (bitIndex / 8 < size) {
+    uint32_t emdfPayloadID = readBits(5);
+    if (emdfPayloadID == 0x1F) skipBits(5);
+
+    // Skip emdf_payload_config
+    if (readBits(1)) skipBits(12);
+    if (readBits(1)) skipBits(11);
+    if (readBits(1)) skipBits(2);
+    if (readBits(1)) skipBits(8);
+    if (!readBits(1)) {
+      skipBits(1);
+      if (!readBits(1) && !readBits(1)) skipBits(9);
+    }
+
+    uint32_t emdfPayloadSize = readBits(8) * 8;
+
+    if (emdfPayloadID == 14) {
+      skipBits(12);
+      uint32_t jocNumObjectsBits = readBits(6);
+      return jocNumObjectsBits > 0;
+    }
+
+    skipBits(emdfPayloadSize + 1);
+  }
+
+  return false;
+}
+
 bool CAEStreamParser::TrySyncAC3(uint8_t* data,
                                  unsigned int size,
                                  bool resyncing,
                                  bool wantEAC3dependent)
 {
+
+  // https://www.etsi.org/deliver/etsi_ts/103400_103499/103420/01.02.01_60/ts_103420v010201p.pdf
+
   if (size < 8)
     return false;
 
@@ -472,6 +557,17 @@ bool CAEStreamParser::TrySyncAC3(uint8_t* data,
       }
     }
 
+    // Check for Joint Object Coding aka Atmos in the first 8 frames, otherwise not Atmos.
+    if (!m_info.m_isDolbyAtmos && (m_eac3DolbyAtmosCheckCount < 8)) {
+
+      m_eac3DolbyAtmosCheckCount++;
+      m_info.m_isDolbyAtmos = hasEAC3JOC(data, size);
+
+      if (m_info.m_isDolbyAtmos)
+        CLog::Log(LOGINFO, "CAEStreamParser::TrySyncAC3 - E-AC3 stream detected with Atmos on frame [{}]",
+                  m_eac3DolbyAtmosCheckCount);
+    }
+
     if (m_info.m_type == CAEStreamInfo::STREAM_TYPE_EAC3 && m_hasSync && !resyncing)
       return true;
 
@@ -481,6 +577,7 @@ bool CAEStreamParser::TrySyncAC3(uint8_t* data,
     m_syncFunc = &CAEStreamParser::SyncAC3;
     m_info.m_type = CAEStreamInfo::STREAM_TYPE_EAC3;
     m_info.m_ac3FrameSize += m_fsize;
+    m_info.m_bitDepth = 16;
 
     CLog::Log(LOGINFO, "CAEStreamParser::TrySyncAC3 - E-AC3 stream detected ({} channels, {}Hz)",
               m_info.m_channels, m_info.m_sampleRate);
@@ -502,6 +599,7 @@ unsigned int CAEStreamParser::SyncAC3(uint8_t* data, unsigned int size)
   // if we get here, the entire packet is invalid and we have lost sync
   CLog::Log(LOGINFO, "CAEStreamParser::SyncAC3 - AC3 sync lost");
   m_hasSync = false;
+  m_eac3DolbyAtmosCheckCount = 0;
   return skip;
 }
 
