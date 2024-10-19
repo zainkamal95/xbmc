@@ -1114,11 +1114,11 @@ void CBitstreamConverter::ProcessSeiPrefix(uint8_t *buf, int32_t nal_size, uint8
   std::vector<uint8_t> clearBuf;
   auto messages = CHevcSei::ParseSeiRbspUnclearedEmulation(buf, nal_size, clearBuf);
 
-  if (auto res = CHevcSei::ExtractMasteringDisplayColourVolume(messages, clearBuf))
-    ApplyMasteringDisplayColourVolume(res.value());
+  if (auto colourVolume = CHevcSei::ExtractMasteringDisplayColourVolume(messages, clearBuf))
+    ApplyMasteringDisplayColourVolume(colourVolume.value());
 
-  if (auto res = CHevcSei::ExtractContentLightLevel(messages, clearBuf))
-    ApplyContentLightLevel(res.value());
+  if (auto lightLevel = CHevcSei::ExtractContentLightLevel(messages, clearBuf))
+    ApplyContentLightLevel(lightLevel.value());
 
   if (auto res = CHevcSei::ExtractHdr10Plus(messages, clearBuf)) {
 
