@@ -385,6 +385,7 @@ CBitstreamConverter::CBitstreamConverter(CDVDStreamInfo& hints) : m_hints(hints)
   m_start_decode = true;
   m_convert_dovi = 0;
   m_convert_Hdr10Plus = false;
+  m_prefer_Hdr10Plus_convertion = false;
   m_removeDovi = false;
   m_removeHdr10Plus = false;
   m_dovi_el_type = ELType::TYPE_NONE;
@@ -1122,18 +1123,19 @@ void CBitstreamConverter::ProcessSeiPrefix(uint8_t *buf, int32_t nal_size, uint8
 
   if (auto res = CHevcSei::ExtractHdr10Plus(messages, clearBuf)) {
 
-    if (m_first_convert && (m_intial_hdrType == StreamHdrType::HDR_TYPE_HDR10)) {
-      m_hints.hdrType = StreamHdrType::HDR_TYPE_HDR10PLUS;
-      m_source_hdr_type = StreamHdrType::HDR_TYPE_HDR10PLUS;
-    }
+    bool convert = m_convert_Hdr10Plus && ((m_intial_hdrType == StreamHdrType::HDR_TYPE_HDR10) || m_prefer_Hdr10Plus_convertion);
 
-    if (m_convert_Hdr10Plus && (m_intial_hdrType != StreamHdrType::HDR_TYPE_DOLBYVISION)) {
+    if (convert) {
+      if (m_first_convert) {
+        m_hints.hdrType = StreamHdrType::HDR_TYPE_HDR10PLUS;
+        m_source_hdr_type = StreamHdrType::HDR_TYPE_HDR10PLUS;
+      }
       meta = res.value();
       convert_hdr10plus_meta = true;
       copy = false;
     }
 
-    if (m_removeHdr10Plus) {
+    if (convert || m_removeHdr10Plus) {
       // Remove and carry forward remaining sei in nalu.
       auto nalu = CHevcSei::RemoveHdr10PlusFromSeiNalu(buf, nal_size);
       if (!nalu.empty())
@@ -1243,12 +1245,12 @@ bool CBitstreamConverter::BitstreamConvert(uint8_t* pData, int iSize, uint8_t **
           break;
 
         case HEVC_NAL_UNSPEC62: // DoVi RPU
-          if (!m_removeDovi) 
+          if (!m_removeDovi && !convert_hdr10plus_meta)
             ProcessDoViRpu(buf, nal_size, poutbuf, poutbuf_size);
           break;
 
         case HEVC_NAL_UNSPEC63: // DoVi EL
-          if (!m_removeDovi && !m_convert_dovi)
+          if (!m_removeDovi && !convert_hdr10plus_meta && !m_convert_dovi)
             BitstreamAllocAndCopy(poutbuf, poutbuf_size, NULL, 0, buf, nal_size, unit_type);
           break;
 
