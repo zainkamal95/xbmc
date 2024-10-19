@@ -4059,6 +4059,17 @@
           </dependencies>
           <control type="toggle" />
         </setting>
+        <setting id="coreelec.amlogic.dolbyvision.hdr10plus.prefer.convert" type="boolean" label="50121" help="50122" parent="coreelec.amlogic.dolbyvision.hdr10plus.convert">
+          <requirement>HAVE_AMCODEC</requirement>
+          <visible>false</visible>
+          <level>2</level>
+          <default>0</default>
+          <dependencies>
+            <dependency type="visible" setting="coreelec.amlogic.dolbyvision.mode" operator="!is">2</dependency>
+            <dependency type="visible" setting="coreelec.amlogic.dolbyvision.hdr10plus.convert" operator="is">true</dependency>
+          </dependencies>
+          <control type="toggle" />
+        </setting>
         <setting id="coreelec.amlogic.dolbyvision.hdr10plus.peak.brightness.source" type="integer" label="50103" help="50104" parent="coreelec.amlogic.dolbyvision.hdr10plus.convert">
           <requirement>HAVE_AMCODEC</requirement>
           <visible>false</visible>
