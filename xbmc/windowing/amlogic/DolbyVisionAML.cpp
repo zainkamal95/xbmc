@@ -260,6 +260,7 @@ bool CDolbyVisionAML::Setup()
   set_visible(CSettings::SETTING_COREELEC_AMLOGIC_DV_VS10_HDRHLG, true);
   set_visible(CSettings::SETTING_COREELEC_AMLOGIC_DV_VS10_DV, true);
   set_visible(CSettings::SETTING_COREELEC_AMLOGIC_DV_HDR10PLUS_CONVERT, true);
+  set_visible(CSettings::SETTING_COREELEC_AMLOGIC_DV_HDR10PLUS_PREFER_CONVERT, true);
   set_visible(CSettings::SETTING_COREELEC_AMLOGIC_DV_HDR10PLUS_PEAK_BRIGHTNESS_SOURCE, true);
 
   // Register for ui dv mode change - to change on the fly.

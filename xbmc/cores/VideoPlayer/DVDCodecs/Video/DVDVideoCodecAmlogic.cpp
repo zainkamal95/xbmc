@@ -299,37 +299,51 @@ bool CDVDVideoCodecAmlogic::Open(CDVDStreamInfo &hints, CDVDCodecOptions &option
       m_bitstream->Open(true);
 
       // check for hevc-hvcC and convert to h265-annex-b
-      if (m_hints.extradata && !m_hints.cryptoSession)
+      if (m_hints.extradata && !m_hints.cryptoSession && m_bitstream && (aml_dv_mode() != DV_MODE_OFF))
       {
-        if (m_bitstream && (aml_dv_mode() != DV_MODE_OFF))
+        auto settings = CServiceBroker::GetSettingsComponent()->GetSettings();
+        if (m_hints.hdrType == StreamHdrType::HDR_TYPE_DOLBYVISION) 
         {
-          auto settings = CServiceBroker::GetSettingsComponent()->GetSettings();
-          if (m_hints.hdrType == StreamHdrType::HDR_TYPE_DOLBYVISION) {
+          bool preferConvertHdr10Plus = settings->GetBool(CSettings::SETTING_COREELEC_AMLOGIC_DV_HDR10PLUS_PREFER_CONVERT);
+          m_bitstream->SetPreferCovertHdr10Plus(preferConvertHdr10Plus);
+
+          if (preferConvertHdr10Plus) 
+          {
+            CLog::Log(LOGINFO, "{}::{} - DV HEVC bitstream - if also contains HDR10+, conversion will be perfered.",
+                      __MODULE_NAME__, __FUNCTION__);
+          }
+          else
+          {
             int convertDovi = settings->GetInt(CSettings::SETTING_VIDEOPLAYER_CONVERTDOVI);
             if (convertDovi)
             {
-              CLog::Log(LOGINFO, "{}::{} - HEVC bitstream profile 7 will be converted by chosen mode {:d}",
-                __MODULE_NAME__, __FUNCTION__, convertDovi);
               m_bitstream->SetConvertDovi(convertDovi);
-            }
-          } else if (m_hints.hdrType == StreamHdrType::HDR_TYPE_HDR10) {
-            // Potentiall HDR10+ (Cannot tell at this point)
-            if (settings->GetBool(CSettings::SETTING_COREELEC_AMLOGIC_DV_HDR10PLUS_CONVERT))
-            {
-              PeakBrightnessSource peakBrightnessSource = static_cast<PeakBrightnessSource>(settings->GetInt(CSettings::SETTING_COREELEC_AMLOGIC_DV_HDR10PLUS_PEAK_BRIGHTNESS_SOURCE));
-              CLog::Log(LOGINFO, "{}::{} - HEVC bitstream if hdr10plus will be converted to Dolby Vision P8.1 with brightness source {:d}",
-                __MODULE_NAME__, __FUNCTION__, peakBrightnessSource);
-              m_bitstream->SetConvertHdr10Plus(true);
-              m_bitstream->SetConvertHdr10PlusPeakBrightnessSource(peakBrightnessSource);
-            }
-            unsigned int mode(aml_vs10_by_setting(CSettings::SETTING_COREELEC_AMLOGIC_DV_VS10_HDR10PLUS));
-            if (mode < DOLBY_VISION_OUTPUT_MODE_BYPASS)
-            {
-              // for VS10 conversion need to remove the HDR10plus metadata.
-              CLog::Log(LOGDEBUG, "{}::{} - HEVC bitstream if hdr10plus metadata will be removed to allow VS10",
-                __MODULE_NAME__, __FUNCTION__);
-              m_bitstream->SetRemoveHdr10Plus(true);
-            }
+              CLog::Log(LOGINFO, "{}::{} - DV HEVC bitstream - if Profile 7 then will be converted by chosen mode {:d}",
+                        __MODULE_NAME__, __FUNCTION__, convertDovi);
+            }   
+          }
+        }
+
+        // Potential HDR10+ (Cannot tell at this point)
+        if (settings->GetBool(CSettings::SETTING_COREELEC_AMLOGIC_DV_HDR10PLUS_CONVERT))
+        {
+          PeakBrightnessSource peakBrightnessSource = static_cast<PeakBrightnessSource>(settings->GetInt(CSettings::SETTING_COREELEC_AMLOGIC_DV_HDR10PLUS_PEAK_BRIGHTNESS_SOURCE));
+          CLog::Log(LOGINFO, "{}::{} - HDR10 HEVC bitstream - if HDR10+ then will be converted to Dolby Vision P8.1 with brightness source {:d}",
+            __MODULE_NAME__, __FUNCTION__, peakBrightnessSource);
+          m_bitstream->SetConvertHdr10Plus(true);
+          m_bitstream->SetConvertHdr10PlusPeakBrightnessSource(peakBrightnessSource);
+        }
+
+        // If HDR10 and doing VS10 - remove the HDR10+ if present.
+        if (m_hints.hdrType == StreamHdrType::HDR_TYPE_HDR10) 
+        {
+          unsigned int mode(aml_vs10_by_setting(CSettings::SETTING_COREELEC_AMLOGIC_DV_VS10_HDR10PLUS));
+          if (mode < DOLBY_VISION_OUTPUT_MODE_BYPASS)
+          {
+            // for VS10 conversion need to remove the HDR10plus metadata.
+            CLog::Log(LOGDEBUG, "{}::{} - HDR10 HEVC bitstream - if HDR10+ then metadata will be removed to allow correct VS10 processing",
+              __MODULE_NAME__, __FUNCTION__);
+            m_bitstream->SetRemoveHdr10Plus(true);
           }
         }
       }
