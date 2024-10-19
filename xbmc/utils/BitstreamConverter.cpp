@@ -294,11 +294,24 @@ static void get_dovi_info(uint8_t* buf, uint32_t nal_size, enum ELType& el_type,
 
   if (vdr_dm_data->dm_data.level254)
   {
-    meta_version = fmt::format("CMv4.0 {}-{}", vdr_dm_data->dm_data.level254->dm_version_index, vdr_dm_data->dm_data.level254->dm_mode);
+    unsigned int noL8 = vdr_dm_data->dm_data.level8.len;
+    if (noL8 > 0)
+      meta_version = fmt::format("CMv4.0 {}-{} {}-L8", 
+                                 vdr_dm_data->dm_data.level254->dm_version_index, 
+                                 vdr_dm_data->dm_data.level254->dm_mode,
+                                 noL8);
+    else 
+      meta_version = fmt::format("CMv4.0 {}-{}", 
+                                 vdr_dm_data->dm_data.level254->dm_version_index, 
+                                 vdr_dm_data->dm_data.level254->dm_mode);
   }
   else if (vdr_dm_data->dm_data.level1)
   {
-    meta_version = "CMv2.9";
+    unsigned int noL2 = vdr_dm_data->dm_data.level2.len;
+    if (noL2 > 0)
+      meta_version = fmt::format("CMv2.9 {}-L2", noL2);
+    else 
+      meta_version = "CMv2.9";
   }
 
   const DoviRpuDataHeader* header = dovi_rpu_get_header(rpuOpaque);
