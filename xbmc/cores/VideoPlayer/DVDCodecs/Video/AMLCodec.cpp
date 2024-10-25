@@ -2074,15 +2074,14 @@ bool CAMLCodec::OpenDecoder(CDVDStreamInfo &hints)
   if ((hints.hdrType == StreamHdrType::HDR_TYPE_DOLBYVISION) && aml_is_dv_enable()) 
   {
     am_private->gcodec.dv_enable = 1;
-    if ((hints.dovi.dv_profile == 4 || hints.dovi.dv_profile == 7) && CServiceBroker::GetSettingsComponent()->GetSettings()->GetInt(
-        CSettings::SETTING_VIDEOPLAYER_CONVERTDOVI) == 0)
+    if ((hints.dovi.dv_profile == 4) || (hints.dovi.dv_profile == 7))
     {
       if (hints.dovi_el_type == DOVIELType::TYPE_FEL) // use stream path if FEL
       {
         CSysfsPath amdolby_vision_debug{"/sys/class/amdolby_vision/debug"};
         if (amdolby_vision_debug.Exists())
           amdolby_vision_debug.Set("enable_fel 1");
-        am_private->gcodec.dec_mode  = STREAM_TYPE_STREAM;
+        am_private->gcodec.dec_mode = STREAM_TYPE_STREAM;
       }
     }
   }
