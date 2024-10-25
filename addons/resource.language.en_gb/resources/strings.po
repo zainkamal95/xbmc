@@ -24050,6 +24050,36 @@ msgctxt "#39201"
 msgid "HDR10+"
 msgstr ""
 
+#. Dolby Vision RPU Conversion
+#: system/settings/settings.xml
+msgctxt "#39300"
+msgid "Lossless"
+msgstr ""
+
+#. Dolby Vision RPU Conversion
+#: system/settings/settings.xml
+msgctxt "#39301"
+msgid "To MEL"
+msgstr ""
+
+#. Dolby Vision RPU Conversion
+#: system/settings/settings.xml
+msgctxt "#39302"
+msgid "To Profile 8.1"
+msgstr ""
+
+#. Dolby Vision RPU Conversion
+#: system/settings/settings.xml
+msgctxt "#39303"
+msgid "To Profile 8.4"
+msgstr ""
+
+#. Dolby Vision RPU Conversion
+#: system/settings/settings.xml
+msgctxt "#39304"
+msgid "To Profile 8.1 Mapping Preserved"
+msgstr ""
+
 # 40000 to 40800 are reserved for Video Versions feature
 
 #. Generic video versions label (plural)
