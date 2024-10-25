@@ -325,25 +325,25 @@ bool CDVDVideoCodecAmlogic::Open(CDVDStreamInfo &hints, CDVDCodecOptions &option
 
           if (m_hints.dovi.dv_profile == 7) 
           {
-            if (m_hints.dovi.bl_present_flag == 0)  // If missing the bl present flag then need to convert - logic form CE Team presumably for Dual Layer - odd sounding senario.
-            {
-              CLog::Log(LOGINFO, "{}::{} - DV HEVC bitstream - will be converted to minimum enhancement layer because no BL flag is present",
-                        __MODULE_NAME__, __FUNCTION__);
-              m_hints.dovi.el_present_flag = 0;
-              m_hints.dovi.bl_present_flag = 1;
-              m_bitstream->SetConvertDovi(DOVIMode::MODE_TOMEL);
-            } 
-            else // If not required to convert - check if user wants to convert.
-            {
+            //if (m_hints.dovi.bl_present_flag == 0)  // If missing the bl present flag then need to convert - logic form CE Team presumably for Dual Layer - odd sounding senario.
+            //{
+            //  CLog::Log(LOGINFO, "{}::{} - DV HEVC bitstream - will be converted to minimum enhancement layer because no BL flag is present",
+            //            __MODULE_NAME__, __FUNCTION__);
+            //  m_hints.dovi.el_present_flag = 0;
+            //  m_hints.dovi.bl_present_flag = 1;
+            //  m_bitstream->SetConvertDovi(DOVIMode::MODE_TOMEL);
+            //} 
+            //else // If not required to convert - check if user wants to convert.
+            //{
               DOVIMode convertDovi = static_cast<DOVIMode>(settings->GetInt(CSettings::SETTING_VIDEOPLAYER_CONVERTDOVI));
               if (convertDovi)
               {
                 CLog::Log(LOGINFO, "{}::{} - DV HEVC bitstream - user chooses to convert to mode [{:d}]",
                           __MODULE_NAME__, __FUNCTION__, convertDovi);
-                m_bitstream->SetConvertDovi(convertDovi);                  
+                m_bitstream->SetConvertDovi(convertDovi);
               }
-            }
-          }          
+            //}
+          }
         }
 
         // Potential HDR10+ (Cannot tell at this point)
