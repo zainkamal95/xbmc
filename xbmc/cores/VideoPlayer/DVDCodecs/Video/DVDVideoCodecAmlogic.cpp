@@ -307,46 +307,50 @@ bool CDVDVideoCodecAmlogic::Open(CDVDStreamInfo &hints, CDVDCodecOptions &option
       m_bitstream = std::make_unique<CBitstreamConverter>(m_hints, m_processInfo);
       m_bitstream->Open(true);
 
-      // check for hevc-hvcC and convert to h265-annex-b
+      // check for hevc-hvcC and convert to h265-annex-b - and DV is on.
       if (m_hints.extradata && !m_hints.cryptoSession && m_bitstream && (aml_dv_mode() != DV_MODE_OFF))
       {
         auto settings = CServiceBroker::GetSettingsComponent()->GetSettings();
         if (m_hints.hdrType == StreamHdrType::HDR_TYPE_DOLBYVISION) 
         {
-          bool preferConvertHdr10Plus = settings->GetBool(CSettings::SETTING_COREELEC_AMLOGIC_DV_HDR10PLUS_PREFER_CONVERT);
-          m_bitstream->SetPreferCovertHdr10Plus(preferConvertHdr10Plus);
+          if (settings->GetBool(CSettings::SETTING_COREELEC_AMLOGIC_DV_HDR10PLUS_CONVERT)) 
+          {
+            bool preferConvertHdr10Plus = settings->GetBool(CSettings::SETTING_COREELEC_AMLOGIC_DV_HDR10PLUS_PREFER_CONVERT);
+            m_bitstream->SetPreferCovertHdr10Plus(preferConvertHdr10Plus);
 
-          if (preferConvertHdr10Plus) 
-          {
-            CLog::Log(LOGINFO, "{}::{} - DV HEVC bitstream - if also contains HDR10+, conversion will be prefered.",
-                      __MODULE_NAME__, __FUNCTION__);
+            if (preferConvertHdr10Plus) 
+              CLog::Log(LOGINFO, "{}::{} - DV HEVC bitstream - if stream also contains HDR10+, conversion will be prefered over original Dolby Vision.",
+                        __MODULE_NAME__, __FUNCTION__);
           }
-          else
+
+          if (m_hints.dovi.dv_profile == 7) 
           {
-            if ((m_hints.dovi.dv_profile == 4) || (m_hints.dovi.dv_profile == 7)) {
+            if (m_hints.dovi.bl_present_flag == 0)  // If missing the bl present flag then need to convert - logic form CE Team presumably for Dual Layer - odd sounding senario.
+            {
+              CLog::Log(LOGINFO, "{}::{} - DV HEVC bitstream - will be converted to minimum enhancement layer because no BL flag is present",
+                        __MODULE_NAME__, __FUNCTION__);
+              m_hints.dovi.el_present_flag = 0;
+              m_hints.dovi.bl_present_flag = 1;
+              m_bitstream->SetConvertDovi(DOVIMode::MODE_TOMEL);
+            } 
+            else // If not required to convert - check if user wants to convert.
+            {
               DOVIMode convertDovi = static_cast<DOVIMode>(settings->GetInt(CSettings::SETTING_VIDEOPLAYER_CONVERTDOVI));
               if (convertDovi)
               {
-                m_bitstream->SetConvertDovi(convertDovi);
-                CLog::Log(LOGINFO, "{}::{} - DV HEVC bitstream - will be converted by chosen mode {:d}",
+                CLog::Log(LOGINFO, "{}::{} - DV HEVC bitstream - user chooses to convert to mode [{:d}]",
                           __MODULE_NAME__, __FUNCTION__, convertDovi);
-              } else if (!m_hints.dovi.bl_present_flag)
-              {
-                CLog::Log(LOGINFO, "{}::{} - DV HEVC bitstream - will be converted to minimum enhancement layer because of no BL flag is present",
-                          __MODULE_NAME__, __FUNCTION__);
-                m_hints.dovi.el_present_flag = false;
-                m_hints.dovi.bl_present_flag = true;
-                m_bitstream->SetConvertDovi(DOVIMode::MODE_TOMEL);
+                m_bitstream->SetConvertDovi(convertDovi);                  
               }
             }
-          }
+          }          
         }
 
         // Potential HDR10+ (Cannot tell at this point)
         if (settings->GetBool(CSettings::SETTING_COREELEC_AMLOGIC_DV_HDR10PLUS_CONVERT))
         {
           PeakBrightnessSource peakBrightnessSource = static_cast<PeakBrightnessSource>(settings->GetInt(CSettings::SETTING_COREELEC_AMLOGIC_DV_HDR10PLUS_PEAK_BRIGHTNESS_SOURCE));
-          CLog::Log(LOGINFO, "{}::{} - HDR10 HEVC bitstream - if HDR10+ then will be converted to Dolby Vision P8.1 with brightness source {:d}",
+          CLog::Log(LOGINFO, "{}::{} - HDR10 HEVC bitstream - if HDR10+ then will be converted to Dolby Vision P8.1 with brightness source [{:d}]",
             __MODULE_NAME__, __FUNCTION__, peakBrightnessSource);
           m_bitstream->SetConvertHdr10Plus(true);
           m_bitstream->SetConvertHdr10PlusPeakBrightnessSource(peakBrightnessSource);
