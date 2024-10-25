@@ -285,38 +285,35 @@ static bool has_sei_recovery_point(const uint8_t *p, const uint8_t *end)
   return false;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef HAVE_LIBDOVI
+
 // The returned data must be freed with `dovi_data_free`
 // May be NULL if no conversion was done
-static const DoviData* convert_dovi_rpu_nal(uint8_t* buf, uint32_t nal_size, int mode)
+static const DoviData* convert_dovi_rpu_nal(uint8_t* nal_buf, uint32_t nal_size, int mode)
 {
-  DoviRpuOpaque* rpu = dovi_parse_unspec62_nalu(buf, nal_size);
-  const DoviRpuDataHeader* header = dovi_rpu_get_header(rpu);
+  DoviRpuOpaque* rpuOpaque = dovi_parse_unspec62_nalu(nal_buf, nal_size);
+  const DoviRpuDataHeader* header = dovi_rpu_get_header(rpuOpaque);
   const DoviData* rpu_data = NULL;
 
   if (header && header->guessed_profile == 7)
   {
-    int ret = dovi_convert_rpu_with_mode(rpu, mode);
-    if (ret < 0)
-      goto done;
-
-    rpu_data = dovi_write_unspec62_nalu(rpu);
+    if (dovi_convert_rpu_with_mode(rpuOpaque, mode) >= 0) 
+      rpu_data = dovi_write_unspec62_nalu(rpuOpaque);
   }
 
-done:
   dovi_rpu_free_header(header);
-  dovi_rpu_free(rpu);
+  dovi_rpu_free(rpuOpaque);
 
   return rpu_data;
 }
-#endif
 
-static void get_dovi_info(uint8_t* buf, uint32_t nal_size, enum DOVIELType& dovi_el_type, CProcessInfo& processInfo)
+static void get_dovi_rpu_info(uint8_t* nal_buf, uint32_t nal_size, enum DOVIELType& dovi_el_type, CProcessInfo& processInfo)
 {
-#ifdef HAVE_LIBDOVI
   // https://professionalsupport.dolby.com/s/article/Dolby-Vision-Metadata-Levels?language=en_US
 
-  DoviRpuOpaque* rpuOpaque = dovi_parse_unspec62_nalu(buf, nal_size);
+  DoviRpuOpaque* rpuOpaque = dovi_parse_unspec62_nalu(nal_buf, nal_size);
 
   const DoviVdrDmData* vdr_dm_data = dovi_rpu_get_vdr_dm_data(rpuOpaque);
 
@@ -382,11 +379,11 @@ static void get_dovi_info(uint8_t* buf, uint32_t nal_size, enum DOVIELType& dovi
   dovi_rpu_free_vdr_dm_data(vdr_dm_data);
   dovi_rpu_free_header(header);
   dovi_rpu_free(rpuOpaque);
-#endif
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////
 CBitstreamParser::CBitstreamParser() = default;
 
 void CBitstreamParser::Close()
@@ -818,24 +815,7 @@ bool CBitstreamConverter::Convert(uint8_t *pData_bl, int iSize_bl, uint8_t *pDat
 
       if (nal_type == HEVC_NAL_UNSPEC62)
       {
-        const uint8_t *nalu_62_data = buf;
-
-        get_dovi_info((uint8_t *)nalu_62_data, size, m_hints.dovi_el_type, m_processInfo); 
-
-#ifdef HAVE_LIBDOVI
-        const DoviData* rpu_data = NULL;
-        if (m_convert_dovi != DOVIMode::MODE_NONE)
-        {
-          // Convert the RPU itself
-          rpu_data = convert_dovi_rpu_nal(buf, size, m_convert_dovi);
-          if (rpu_data)
-          {
-            nalu_62_data = rpu_data->data;
-            size = rpu_data->len;
-          }
-        }
-#endif
-        BitstreamAllocAndCopy(&m_convertBuffer, &offset, nalu_62_data, size, nal_type);
+        ProcessDoViRpuWrap(buf, size, &m_convertBuffer, offset);
       }
       else
       {
@@ -1188,7 +1168,11 @@ void CBitstreamConverter::AddDoViRpuNalu(const Hdr10PlusMetadata& meta, uint8_t 
       m_hints.dovi.bl_present_flag = 1;
       m_hints.dovi.dv_bl_signal_compatibility_id = 1;
     }
-    get_dovi_info(nalu.data(), nalu.size(), m_hints.dovi_el_type, m_processInfo);
+
+#ifdef HAVE_LIBDOVI
+    get_dovi_rpu_info(nalu.data(), nalu.size(), m_hints.dovi_el_type, m_processInfo);
+#endif
+
     BitstreamAllocAndCopy(poutbuf, poutbuf_size, NULL, 0, nalu.data(), nalu.size(), HEVC_NAL_UNSPEC62);
     nalu.clear();
   }
@@ -1242,12 +1226,33 @@ void CBitstreamConverter::ProcessSeiPrefix(uint8_t *buf, int32_t nal_size, uint8
   if (copy) BitstreamAllocAndCopy(poutbuf, poutbuf_size, NULL, 0, buf, nal_size, HEVC_NAL_SEI_PREFIX);   
 }
 
-void CBitstreamConverter::ProcessDoViRpu(uint8_t *buf, int32_t nal_size, uint8_t **poutbuf, int *poutbuf_size) {
+void CBitstreamConverter::ProcessDoViRpuWrap(uint8_t *nal_buf, int32_t nal_size, uint8_t **poutbuf, uint32_t& poutbuf_size) {
   
-  if (m_removeDovi) return;
-  
-  get_dovi_info(buf, nal_size, m_hints.dovi_el_type, m_processInfo);
-  BitstreamAllocAndCopy(poutbuf, poutbuf_size, NULL, 0, buf, nal_size, HEVC_NAL_UNSPEC62);
+  int int_poutbuf_size = poutbuf_size;
+  ProcessDoViRpu(nal_buf, nal_size, poutbuf, &int_poutbuf_size);
+  poutbuf_size = static_cast<uint32_t>(int_poutbuf_size);
+}
+
+void CBitstreamConverter::ProcessDoViRpu(uint8_t *nal_buf, int32_t nal_size, uint8_t **poutbuf, int *poutbuf_size) {
+
+#ifdef HAVE_LIBDOVI
+  const DoviData* rpu_data = NULL;
+  if (m_convert_dovi != DOVIMode::MODE_NONE) {
+    rpu_data = convert_dovi_rpu_nal(nal_buf, nal_size, m_convert_dovi);
+    if (rpu_data)
+    {
+      nal_buf = const_cast<uint8_t*>(rpu_data->data);;
+      nal_size = rpu_data->len;
+    }
+  }
+  get_dovi_rpu_info(nal_buf, nal_size, m_hints.dovi_el_type, m_processInfo);
+#endif
+
+  BitstreamAllocAndCopy(poutbuf, poutbuf_size, NULL, 0, nal_buf, nal_size, HEVC_NAL_UNSPEC62);
+
+#ifdef HAVE_LIBDOVI
+  if (rpu_data) dovi_data_free(rpu_data);
+#endif  
 }
 
 bool CBitstreamConverter::BitstreamConvert(uint8_t* pData, int iSize, uint8_t **poutbuf, int *poutbuf_size)
@@ -1341,7 +1346,7 @@ bool CBitstreamConverter::BitstreamConvert(uint8_t* pData, int iSize, uint8_t **
           break;
 
         case HEVC_NAL_UNSPEC63: // DoVi EL
-          if (!m_removeDovi && !convert_hdr10plus_meta && (m_convert_dovi != DOVIMode::MODE_NONE))
+          if (!m_removeDovi && !convert_hdr10plus_meta && (m_convert_dovi == DOVIMode::MODE_NONE))
             BitstreamAllocAndCopy(poutbuf, poutbuf_size, NULL, 0, buf, nal_size, unit_type);
           break;
 
