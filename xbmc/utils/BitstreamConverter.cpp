@@ -1243,6 +1243,11 @@ void CBitstreamConverter::ProcessDoViRpu(uint8_t *nal_buf, int32_t nal_size, uin
     {
       nal_buf = const_cast<uint8_t*>(rpu_data->data);;
       nal_size = rpu_data->len;
+      m_hints.dovi.el_present_flag = 0; // EL removed in both converstion cases to MEL and to P8.1
+      if (m_convert_dovi == DOVIMode::MODE_TO81) {
+        m_hints.dovi.dv_profile = 8;
+        m_hints.dovi.dv_bl_signal_compatibility_id = 1;
+      } 
     }
   }
   get_dovi_rpu_info(nal_buf, nal_size, m_hints.dovi_el_type, m_processInfo);
