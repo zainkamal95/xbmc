@@ -60,10 +60,10 @@ struct pq_ctrl_s {
 class CAMLCodec
 {
 public:
-  CAMLCodec(CProcessInfo &processInfo);
+  CAMLCodec(CProcessInfo &processInfo, CDVDStreamInfo &hints);
   virtual ~CAMLCodec();
 
-  bool          OpenDecoder(CDVDStreamInfo &hints);
+  bool          OpenDecoder();
   bool          Enable_vadj1();
   void          CloseDecoder();
   void          Reset();
@@ -109,7 +109,7 @@ private:
   bool             m_opened;
   bool             m_drain = false;
   am_private_t    *am_private;
-  CDVDStreamInfo   m_hints;
+  CDVDStreamInfo  &m_hints; // Reference as values can change.
   int              m_speed;
   uint64_t         m_cur_pts;
   uint64_t         m_last_pts;
