@@ -62,11 +62,18 @@ public:
   AVColorPrimaries GetVideoColorPrimaries();
   void SetVideoColorTransferCharacteristic(AVColorTransferCharacteristic colorTransferCharacteristic);
   AVColorTransferCharacteristic GetVideoColorTransferCharacteristic();
-  void SetVideoDoViDecoderConfigurationRecord(AVDOVIDecoderConfigurationRecord doViDecoderConfigurationRecord);
-  AVDOVIDecoderConfigurationRecord GetVideoDoViDecoderConfigurationRecord();
 
-  void SetVideoDoViFrameInfo(DOVIFrameInfo value);
-  DOVIFrameInfo GetVideoDoViFrameInfo();
+  void SetVideoDoViFrameMetadata(DOVIFrameMetadata value);
+  DOVIFrameMetadata GetVideoDoViFrameMetadata();
+
+  void SetVideoDoViStreamMetadata(DOVIStreamMetadata value);
+  DOVIStreamMetadata GetVideoDoViStreamMetadata();
+
+  void SetVideoDoViStreamInfo(DOVIStreamInfo value);
+  DOVIStreamInfo GetVideoDoViStreamInfo();
+
+  void SetVideoSourceDoViStreamInfo(DOVIStreamInfo value);
+  DOVIStreamInfo GetVideoSourceDoViStreamInfo();
 
   void SetVideoDoViCodecFourCC(std::string);
   std::string GetVideoDoViCodecFourCC();
@@ -265,9 +272,11 @@ protected:
     AVColorRange colorRange;
     AVColorPrimaries colorPrimaries;
     AVColorTransferCharacteristic colorTransferCharacteristic;
-    AVDOVIDecoderConfigurationRecord doviDecoderConfigurationRecord;
 
-    DOVIFrameInfo doviFrameInfo;
+    DOVIFrameMetadata doviFrameMetadata;
+    DOVIStreamMetadata doviStreamMetadata;
+    DOVIStreamInfo doviStreamInfo;
+    DOVIStreamInfo sourceDoViStreamInfo;
 
     std::string doviCodecFourCC;
 

@@ -267,32 +267,60 @@ AVColorTransferCharacteristic CDataCacheCore::GetVideoColorTransferCharacteristi
   return m_playerVideoInfo.colorTransferCharacteristic;
 }
 
-void CDataCacheCore::SetVideoDoViDecoderConfigurationRecord(AVDOVIDecoderConfigurationRecord doViDecoderConfigurationRecord)
+void CDataCacheCore::SetVideoDoViFrameMetadata(DOVIFrameMetadata value)
 {
   std::unique_lock<CCriticalSection> lock(m_videoPlayerSection);
 
-  m_playerVideoInfo.doviDecoderConfigurationRecord = doViDecoderConfigurationRecord;
+  m_playerVideoInfo.doviFrameMetadata = value;
 }
 
-AVDOVIDecoderConfigurationRecord CDataCacheCore::GetVideoDoViDecoderConfigurationRecord()
+DOVIFrameMetadata CDataCacheCore::GetVideoDoViFrameMetadata()
 {
   std::unique_lock<CCriticalSection> lock(m_videoPlayerSection);
 
-  return m_playerVideoInfo.doviDecoderConfigurationRecord;
+  return m_playerVideoInfo.doviFrameMetadata;
 }
 
-void CDataCacheCore::SetVideoDoViFrameInfo(DOVIFrameInfo value)
+void CDataCacheCore::SetVideoDoViStreamMetadata(DOVIStreamMetadata value)
 {
   std::unique_lock<CCriticalSection> lock(m_videoPlayerSection);
 
-  m_playerVideoInfo.doviFrameInfo = value;
+  m_playerVideoInfo.doviStreamMetadata = value;
 }
 
-DOVIFrameInfo CDataCacheCore::GetVideoDoViFrameInfo()
+DOVIStreamMetadata CDataCacheCore::GetVideoDoViStreamMetadata()
 {
   std::unique_lock<CCriticalSection> lock(m_videoPlayerSection);
 
-  return m_playerVideoInfo.doviFrameInfo;
+  return m_playerVideoInfo.doviStreamMetadata;
+}
+
+void CDataCacheCore::SetVideoDoViStreamInfo(DOVIStreamInfo value)
+{
+  std::unique_lock<CCriticalSection> lock(m_videoPlayerSection);
+
+  m_playerVideoInfo.doviStreamInfo = value;
+}
+
+DOVIStreamInfo CDataCacheCore::GetVideoDoViStreamInfo()
+{
+  std::unique_lock<CCriticalSection> lock(m_videoPlayerSection);
+
+  return m_playerVideoInfo.doviStreamInfo;
+}
+
+void CDataCacheCore::SetVideoSourceDoViStreamInfo(DOVIStreamInfo value)
+{
+  std::unique_lock<CCriticalSection> lock(m_videoPlayerSection);
+
+  m_playerVideoInfo.sourceDoViStreamInfo = value;
+}
+
+DOVIStreamInfo CDataCacheCore::GetVideoSourceDoViStreamInfo()
+{
+  std::unique_lock<CCriticalSection> lock(m_videoPlayerSection);
+
+  return m_playerVideoInfo.sourceDoViStreamInfo;
 }
 
 void CDataCacheCore::SetVideoDoViCodecFourCC(std::string codecFourCC)

@@ -291,7 +291,7 @@ static bool has_sei_recovery_point(const uint8_t *p, const uint8_t *end)
 
 // The returned data must be freed with `dovi_data_free`
 // May be NULL if no conversion was done
-static const DoviData* convert_dovi_rpu_nal(uint8_t* nal_buf, uint32_t nal_size, int mode)
+static const DoviData* convert_dovi_rpu_nal(uint8_t* nal_buf, uint32_t nal_size, int mode, bool first_frame, DOVIELType& dovi_el_type)
 {
   DoviRpuOpaque* rpuOpaque = dovi_parse_unspec62_nalu(nal_buf, nal_size);
   const DoviRpuDataHeader* header = dovi_rpu_get_header(rpuOpaque);
@@ -299,6 +299,18 @@ static const DoviData* convert_dovi_rpu_nal(uint8_t* nal_buf, uint32_t nal_size,
 
   if (header && header->guessed_profile == 7)
   {
+    if (first_frame)
+    {
+      dovi_el_type = DOVIELType::TYPE_NONE;
+      if (header->el_type)
+      {
+        if (StringUtils::EqualsNoCase(header->el_type, "FEL"))
+          dovi_el_type = DOVIELType::TYPE_FEL;
+        else if (StringUtils::EqualsNoCase(header->el_type, "MEL"))
+          dovi_el_type = DOVIELType::TYPE_MEL;
+      }
+    }
+
     if (dovi_convert_rpu_with_mode(rpuOpaque, mode) >= 0) 
       rpu_data = dovi_write_unspec62_nalu(rpuOpaque);
   }
@@ -309,7 +321,7 @@ static const DoviData* convert_dovi_rpu_nal(uint8_t* nal_buf, uint32_t nal_size,
   return rpu_data;
 }
 
-static void get_dovi_rpu_info(uint8_t* nal_buf, uint32_t nal_size, enum DOVIELType& dovi_el_type, CProcessInfo& processInfo)
+static void get_dovi_rpu_info(uint8_t* nal_buf, uint32_t nal_size, bool first_frame, DOVIELType& dovi_el_type, AVDOVIDecoderConfigurationRecord& dovi, CProcessInfo& processInfo)
 {
   // https://professionalsupport.dolby.com/s/article/Dolby-Vision-Metadata-Levels?language=en_US
 
@@ -317,67 +329,71 @@ static void get_dovi_rpu_info(uint8_t* nal_buf, uint32_t nal_size, enum DOVIELTy
 
   const DoviVdrDmData* vdr_dm_data = dovi_rpu_get_vdr_dm_data(rpuOpaque);
 
-  DOVIFrameInfo dovi_frame_info;
-  
   if (vdr_dm_data->dm_data.level1)
   {
-    dovi_frame_info.level1_min_pq = vdr_dm_data->dm_data.level1->min_pq;
-    dovi_frame_info.level1_max_pq = vdr_dm_data->dm_data.level1->max_pq;
-    dovi_frame_info.level1_avg_pq = vdr_dm_data->dm_data.level1->avg_pq;
+    DOVIFrameMetadata dovi_frame_metadata;
+    dovi_frame_metadata.level1_min_pq = vdr_dm_data->dm_data.level1->min_pq;
+    dovi_frame_metadata.level1_max_pq = vdr_dm_data->dm_data.level1->max_pq;
+    dovi_frame_metadata.level1_avg_pq = vdr_dm_data->dm_data.level1->avg_pq;
+    processInfo.SetVideoDoViFrameMetadata(dovi_frame_metadata);
   }
 
-  if (vdr_dm_data->dm_data.level6)
-  {
-    dovi_frame_info.level6_max_lum = vdr_dm_data->dm_data.level6->max_display_mastering_luminance;
-    dovi_frame_info.level6_min_lum = vdr_dm_data->dm_data.level6->min_display_mastering_luminance;
+  if (first_frame) {
+
+    DOVIStreamMetadata dovi_stream_metadata;
+    if (vdr_dm_data->dm_data.level6)
+    {
+      dovi_stream_metadata.level6_max_lum = vdr_dm_data->dm_data.level6->max_display_mastering_luminance;
+      dovi_stream_metadata.level6_min_lum = vdr_dm_data->dm_data.level6->min_display_mastering_luminance;
+      
+      dovi_stream_metadata.level6_max_cll = vdr_dm_data->dm_data.level6->max_content_light_level;
+      dovi_stream_metadata.level6_max_fall = vdr_dm_data->dm_data.level6->max_frame_average_light_level;
+    }
     
-    dovi_frame_info.level6_max_cll = vdr_dm_data->dm_data.level6->max_content_light_level;
-    dovi_frame_info.level6_max_fall = vdr_dm_data->dm_data.level6->max_frame_average_light_level;
+    std::string meta_version = "";
+    if (vdr_dm_data->dm_data.level254)
+    {
+      unsigned int noL8 = vdr_dm_data->dm_data.level8.len;
+      if (noL8 > 0)
+        meta_version = fmt::format("CMv4.0 {}-{} {}-L8", 
+                                  vdr_dm_data->dm_data.level254->dm_version_index, 
+                                  vdr_dm_data->dm_data.level254->dm_mode,
+                                  noL8);
+      else 
+        meta_version = fmt::format("CMv4.0 {}-{}", 
+                                  vdr_dm_data->dm_data.level254->dm_version_index, 
+                                  vdr_dm_data->dm_data.level254->dm_mode);
+    }
+    else if (vdr_dm_data->dm_data.level1)
+    {
+      unsigned int noL2 = vdr_dm_data->dm_data.level2.len;
+      if (noL2 > 0)
+        meta_version = fmt::format("CMv2.9 {}-L2", noL2);
+      else 
+        meta_version = "CMv2.9";
+    }
+    dovi_stream_metadata.meta_version = meta_version;
+    processInfo.SetVideoDoViStreamMetadata(dovi_stream_metadata);
+
+    DOVIStreamInfo dovi_stream_info;
+    const DoviRpuDataHeader* header = dovi_rpu_get_header(rpuOpaque);
+    dovi_el_type = DOVIELType::TYPE_NONE;
+
+    if (header && ((header->guessed_profile == 4) || (header->guessed_profile == 7)) && header->el_type)
+    {
+      if (StringUtils::EqualsNoCase(header->el_type, "FEL"))
+        dovi_el_type = DOVIELType::TYPE_FEL;
+      else if (StringUtils::EqualsNoCase(header->el_type, "MEL"))
+        dovi_el_type = DOVIELType::TYPE_MEL;
+    }
+
+    dovi_stream_info.dovi_el_type = dovi_el_type; 
+    dovi_stream_info.dovi = dovi;    
+    processInfo.SetVideoDoViStreamInfo(dovi_stream_info);
+    dovi_rpu_free_header(header);
   }
-    
-  std::string meta_version = "";
-
-  if (vdr_dm_data->dm_data.level254)
-  {
-    unsigned int noL8 = vdr_dm_data->dm_data.level8.len;
-    if (noL8 > 0)
-      meta_version = fmt::format("CMv4.0 {}-{} {}-L8", 
-                                 vdr_dm_data->dm_data.level254->dm_version_index, 
-                                 vdr_dm_data->dm_data.level254->dm_mode,
-                                 noL8);
-    else 
-      meta_version = fmt::format("CMv4.0 {}-{}", 
-                                 vdr_dm_data->dm_data.level254->dm_version_index, 
-                                 vdr_dm_data->dm_data.level254->dm_mode);
-  }
-  else if (vdr_dm_data->dm_data.level1)
-  {
-    unsigned int noL2 = vdr_dm_data->dm_data.level2.len;
-    if (noL2 > 0)
-      meta_version = fmt::format("CMv2.9 {}-L2", noL2);
-    else 
-      meta_version = "CMv2.9";
-  }
-
-  dovi_frame_info.meta_version = meta_version;
-
-  const DoviRpuDataHeader* header = dovi_rpu_get_header(rpuOpaque);
-  dovi_el_type = DOVIELType::TYPE_NONE;
-
-  if (header && ((header->guessed_profile == 4) || (header->guessed_profile == 7)) && header->el_type)
-  {
-    if (StringUtils::EqualsNoCase(header->el_type, "FEL"))
-      dovi_el_type = DOVIELType::TYPE_FEL;
-    else if (StringUtils::EqualsNoCase(header->el_type, "MEL"))
-      dovi_el_type = DOVIELType::TYPE_MEL;
-  }
-
-  dovi_frame_info.dovi_el_type = dovi_el_type;
-
-  processInfo.SetVideoDoViFrameInfo(dovi_frame_info);
 
   dovi_rpu_free_vdr_dm_data(vdr_dm_data);
-  dovi_rpu_free_header(header);
   dovi_rpu_free(rpuOpaque);
 }
 #endif
@@ -840,6 +856,7 @@ bool CBitstreamConverter::Convert(uint8_t *pData_bl, int iSize_bl, uint8_t *pDat
     m_combine = true;
   }
 
+  m_first_frame = false;
   return true;
 }
 
@@ -1170,7 +1187,7 @@ void CBitstreamConverter::AddDoViRpuNalu(const Hdr10PlusMetadata& meta, uint8_t 
     }
 
 #ifdef HAVE_LIBDOVI
-    get_dovi_rpu_info(nalu.data(), nalu.size(), m_hints.dovi_el_type, m_processInfo);
+    get_dovi_rpu_info(nalu.data(), nalu.size(), m_first_frame, m_hints.dovi_el_type, m_hints.dovi, m_processInfo);
 #endif
 
     BitstreamAllocAndCopy(poutbuf, poutbuf_size, NULL, 0, nalu.data(), nalu.size(), HEVC_NAL_UNSPEC62);
@@ -1238,19 +1255,30 @@ void CBitstreamConverter::ProcessDoViRpu(uint8_t *nal_buf, int32_t nal_size, uin
 #ifdef HAVE_LIBDOVI
   const DoviData* rpu_data = NULL;
   if (m_convert_dovi != DOVIMode::MODE_NONE) {
-    rpu_data = convert_dovi_rpu_nal(nal_buf, nal_size, m_convert_dovi);
+    DOVIELType dovi_el_type = DOVIELType::TYPE_NONE;
+    rpu_data = convert_dovi_rpu_nal(nal_buf, nal_size, m_convert_dovi, m_first_frame, dovi_el_type);
     if (rpu_data)
     {
-      nal_buf = const_cast<uint8_t*>(rpu_data->data);;
+      nal_buf = const_cast<uint8_t*>(rpu_data->data);
       nal_size = rpu_data->len;
-      m_hints.dovi.el_present_flag = 0; // EL removed in both converstion cases to MEL and to P8.1
+
+      // Capture the DOVI source details - about to be replaced.
+      if (m_first_frame) 
+      {
+        DOVIStreamInfo dovi_stream_info;
+        dovi_stream_info.dovi_el_type = dovi_el_type;
+        dovi_stream_info.dovi = m_hints.dovi;
+        m_processInfo.SetVideoSourceDoViStreamInfo(dovi_stream_info);
+      }
+
+      m_hints.dovi.el_present_flag = 0; // EL removed in both converstion cases - to MEL and to P8.1
       if (m_convert_dovi == DOVIMode::MODE_TO81) {
         m_hints.dovi.dv_profile = 8;
         m_hints.dovi.dv_bl_signal_compatibility_id = 1;
-      } 
+      }
     }
   }
-  get_dovi_rpu_info(nal_buf, nal_size, m_hints.dovi_el_type, m_processInfo);
+  get_dovi_rpu_info(nal_buf, nal_size, m_first_frame, m_hints.dovi_el_type, m_hints.dovi, m_processInfo);
 #endif
 
   BitstreamAllocAndCopy(poutbuf, poutbuf_size, NULL, 0, nal_buf, nal_size, HEVC_NAL_UNSPEC62);

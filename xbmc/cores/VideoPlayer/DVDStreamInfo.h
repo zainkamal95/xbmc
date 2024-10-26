@@ -32,12 +32,15 @@ enum DOVIELType : int
   TYPE_MEL
 };
 
-struct DOVIFrameInfo
+struct DOVIFrameMetadata
 {
   uint16_t level1_min_pq = 0;
   uint16_t level1_max_pq = 0;
   uint16_t level1_avg_pq = 0;
+};
 
+struct DOVIStreamMetadata
+{
   uint16_t level6_max_lum = 0;
   uint16_t level6_min_lum = 0;
 
@@ -45,8 +48,12 @@ struct DOVIFrameInfo
   uint16_t level6_max_fall = 0;
 
   std::string meta_version = "";
+};
 
+struct DOVIStreamInfo
+{
   DOVIELType dovi_el_type = DOVIELType::TYPE_NONE;
+  AVDOVIDecoderConfigurationRecord dovi = {};
 };
 
 struct HDRStaticMetadataInfo
@@ -116,7 +123,7 @@ public:
   std::shared_ptr<AVContentLightMetadata> contentLightMetadata;
   std::string stereo_mode; // stereoscopic 3d mode
   AVDOVIDecoderConfigurationRecord dovi{};
-  enum DOVIELType dovi_el_type = DOVIELType::TYPE_NONE;
+  DOVIELType dovi_el_type = DOVIELType::TYPE_NONE;
   CDVDClock *pClock;
 
   // AUDIO
