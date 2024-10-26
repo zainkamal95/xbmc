@@ -1812,7 +1812,7 @@ static inline int calc_chunk_size(int size)
 }
 
 /*************************************************************************/
-CAMLCodec::CAMLCodec(CProcessInfo &processInfo)
+CAMLCodec::CAMLCodec(CProcessInfo &processInfo, CDVDStreamInfo &hints)
   : m_opened(false)
   , m_speed(DVD_PLAYSPEED_NORMAL)
   , m_cur_pts(DVD_NOPTS_VALUE)
@@ -1820,6 +1820,7 @@ CAMLCodec::CAMLCodec(CProcessInfo &processInfo)
   , m_bufferIndex(-1)
   , m_state(0)
   , m_processInfo(processInfo)
+  , m_hints(hints)
 {
   am_private = new am_private_t();
   m_dll = new DllLibAmCodec;
@@ -1898,9 +1899,8 @@ void CAMLCodec::SetProcessInfoVideoDetails()
   m_processInfo.SetVideoColorPrimaries(m_hints.colorPrimaries);
   m_processInfo.SetVideoColorTransferCharacteristic(m_hints.colorTransferCharacteristic);
 
-  if (m_hints.hdrType == StreamHdrType::HDR_TYPE_DOLBYVISION) {
-
-    m_processInfo.SetVideoDoViDecoderConfigurationRecord(m_hints.dovi);
+  if (m_hints.hdrType == StreamHdrType::HDR_TYPE_DOLBYVISION) 
+  {
     m_processInfo.SetVideoDoViCodecFourCC(GetDoViCodecFourCC(m_hints.codec_tag));
 
     if (m_hints.dovi_el_type == DOVIELType::TYPE_FEL)
@@ -1914,7 +1914,7 @@ void CAMLCodec::SetProcessInfoVideoDetails()
   }
 }
 
-bool CAMLCodec::OpenDecoder(CDVDStreamInfo &hints)
+bool CAMLCodec::OpenDecoder()
 {
   m_speed = DVD_PLAYSPEED_NORMAL;
   m_drain = false;
@@ -1924,7 +1924,7 @@ bool CAMLCodec::OpenDecoder(CDVDStreamInfo &hints)
   m_contrast = -1;
   m_brightness = -1;
   m_vadj1_enabled = false;
-  m_hints = hints;
+  CDVDStreamInfo &hints = m_hints;  // Fudge to avoid large chnage delta renaming hints to m_hints.
   m_state = 0;
   m_hints.pClock = hints.pClock;
   m_tp_last_frame = std::chrono::system_clock::now();
@@ -2066,7 +2066,7 @@ bool CAMLCodec::OpenDecoder(CDVDStreamInfo &hints)
   am_private->gcodec.dec_mode    = STREAM_TYPE_FRAME;
   am_private->gcodec.video_path  = FRAME_BASE_PATH_AMLVIDEO_AMVIDEO;
 
-  aml_dv_open(m_hints.hdrType, m_hints.bitdepth);
+  aml_dv_open(hints.hdrType, hints.bitdepth);
 
   SetProcessInfoVideoDetails();
 
