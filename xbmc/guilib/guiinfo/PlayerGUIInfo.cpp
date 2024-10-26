@@ -234,7 +234,7 @@ std::string HdrTypeToString(StreamHdrType hdrType) {
   return "";
 }
 
-std::string DoViELTypeToString(enum DOVIELType doviElType) {
+std::string DoViELTypeToString(DOVIELType doviElType) {
   switch (doviElType) {
     case DOVIELType::TYPE_NONE: return "none";
     case DOVIELType::TYPE_FEL: return "full";
@@ -272,8 +272,8 @@ std::string uint8_to_padded_string(uint8_t value) {
 std::string VideoDoViCodecString() {
 
   std::string fourCC = CServiceBroker::GetDataCacheCore().GetVideoDoViCodecFourCC();
-  uint8_t profile = CServiceBroker::GetDataCacheCore().GetVideoDoViDecoderConfigurationRecord().dv_profile;
-  uint8_t level = CServiceBroker::GetDataCacheCore().GetVideoDoViDecoderConfigurationRecord().dv_level;
+  uint8_t profile = CServiceBroker::GetDataCacheCore().GetVideoDoViStreamInfo().dovi.dv_profile;
+  uint8_t level = CServiceBroker::GetDataCacheCore().GetVideoDoViStreamInfo().dovi.dv_level;
 
   return fmt::format("{}.{}.{}", fourCC, uint8_to_padded_string(profile), uint8_to_padded_string(level));
 }
@@ -571,29 +571,43 @@ bool CPlayerGUIInfo::GetLabel(std::string& value, const CFileItem *item, int con
       value = av_color_transfer_name(CServiceBroker::GetDataCacheCore().GetVideoColorTransferCharacteristic());
       return true;
     case PLAYER_PROCESS_VIDEO_DOVI_VERSION_MAJOR:
-      value = std::to_string(CServiceBroker::GetDataCacheCore().GetVideoDoViDecoderConfigurationRecord().dv_version_major);
+      value = std::to_string(CServiceBroker::GetDataCacheCore().GetVideoDoViStreamInfo().dovi.dv_version_major);
       return true;
     case PLAYER_PROCESS_VIDEO_DOVI_VERSION_MINOR:
-      value = std::to_string(CServiceBroker::GetDataCacheCore().GetVideoDoViDecoderConfigurationRecord().dv_version_minor);
+      value = std::to_string(CServiceBroker::GetDataCacheCore().GetVideoDoViStreamInfo().dovi.dv_version_minor);
       return true;
     case PLAYER_PROCESS_VIDEO_DOVI_PROFILE:
-      value = std::to_string(CServiceBroker::GetDataCacheCore().GetVideoDoViDecoderConfigurationRecord().dv_profile);
+      value = std::to_string(CServiceBroker::GetDataCacheCore().GetVideoDoViStreamInfo().dovi.dv_profile);
       return true;
     case PLAYER_PROCESS_VIDEO_DOVI_LEVEL:
-      value = std::to_string(CServiceBroker::GetDataCacheCore().GetVideoDoViDecoderConfigurationRecord().dv_level);
+      value = std::to_string(CServiceBroker::GetDataCacheCore().GetVideoDoViStreamInfo().dovi.dv_level);
       return true;
     case PLAYER_PROCESS_VIDEO_DOVI_RPU_PRESENT:
-      value = std::to_string(CServiceBroker::GetDataCacheCore().GetVideoDoViDecoderConfigurationRecord().rpu_present_flag);
+      value = std::to_string(CServiceBroker::GetDataCacheCore().GetVideoDoViStreamInfo().dovi.rpu_present_flag);
       return true;
     case PLAYER_PROCESS_VIDEO_DOVI_EL_PRESENT:
-      value = std::to_string(CServiceBroker::GetDataCacheCore().GetVideoDoViDecoderConfigurationRecord().el_present_flag);
+      value = std::to_string(CServiceBroker::GetDataCacheCore().GetVideoDoViStreamInfo().dovi.el_present_flag);
       return true;
     case PLAYER_PROCESS_VIDEO_DOVI_BL_PRESENT:
-      value = std::to_string(CServiceBroker::GetDataCacheCore().GetVideoDoViDecoderConfigurationRecord().bl_present_flag);
+      value = std::to_string(CServiceBroker::GetDataCacheCore().GetVideoDoViStreamInfo().dovi.bl_present_flag);
       return true;
     case PLAYER_PROCESS_VIDEO_DOVI_BL_SIGNAL_COMPATIBILITY:
-      value = std::to_string(CServiceBroker::GetDataCacheCore().GetVideoDoViDecoderConfigurationRecord().dv_bl_signal_compatibility_id);
+      value = std::to_string(CServiceBroker::GetDataCacheCore().GetVideoDoViStreamInfo().dovi.dv_bl_signal_compatibility_id);
       return true;
+
+    case PLAYER_PROCESS_VIDEO_SOURCE_DOVI_PROFILE:
+      value = std::to_string(CServiceBroker::GetDataCacheCore().GetVideoSourceDoViStreamInfo().dovi.dv_profile);
+      return true;
+    case PLAYER_PROCESS_VIDEO_SOURCE_DOVI_BL_SIGNAL_COMPATIBILITY:
+      value = std::to_string(CServiceBroker::GetDataCacheCore().GetVideoSourceDoViStreamInfo().dovi.dv_bl_signal_compatibility_id);
+      return true;
+    case PLAYER_PROCESS_VIDEO_SOURCE_DOVI_EL_PRESENT:
+      value = std::to_string(CServiceBroker::GetDataCacheCore().GetVideoSourceDoViStreamInfo().dovi.el_present_flag);
+      return true;
+    case PLAYER_PROCESS_VIDEO_SOURCE_DOVI_EL_TYPE:
+      value = DoViELTypeToString(CServiceBroker::GetDataCacheCore().GetVideoSourceDoViStreamInfo().dovi_el_type);
+      return true;
+
     case PLAYER_PROCESS_VIDEO_DOVI_CODEC_FOURCC:
       value = CServiceBroker::GetDataCacheCore().GetVideoDoViCodecFourCC();
       return true;
@@ -602,43 +616,43 @@ bool CPlayerGUIInfo::GetLabel(std::string& value, const CFileItem *item, int con
       return true;
 
     case PLAYER_PROCESS_VIDEO_DOVI_EL_TYPE:
-      value = DoViELTypeToString(CServiceBroker::GetDataCacheCore().GetVideoDoViFrameInfo().dovi_el_type);
+      value = DoViELTypeToString(CServiceBroker::GetDataCacheCore().GetVideoDoViStreamInfo().dovi_el_type);
       return true;
     case PLAYER_PROCESS_VIDEO_DOVI_META_VERSION:
-      value = CServiceBroker::GetDataCacheCore().GetVideoDoViFrameInfo().meta_version;
+      value = CServiceBroker::GetDataCacheCore().GetVideoDoViStreamMetadata().meta_version;
       return true;
 
     case PLAYER_PROCESS_VIDEO_DOVI_L1_MIN_PQ:
-      value = StringUtils::FormatNumber(CServiceBroker::GetDataCacheCore().GetVideoDoViFrameInfo().level1_min_pq, 0);
+      value = StringUtils::FormatNumber(CServiceBroker::GetDataCacheCore().GetVideoDoViFrameMetadata().level1_min_pq, 0);
       return true;
     case PLAYER_PROCESS_VIDEO_DOVI_L1_MAX_PQ:
-      value = StringUtils::FormatNumber(CServiceBroker::GetDataCacheCore().GetVideoDoViFrameInfo().level1_max_pq, 0);
+      value = StringUtils::FormatNumber(CServiceBroker::GetDataCacheCore().GetVideoDoViFrameMetadata().level1_max_pq, 0);
       return true;
     case PLAYER_PROCESS_VIDEO_DOVI_L1_AVG_PQ:
-      value = StringUtils::FormatNumber(CServiceBroker::GetDataCacheCore().GetVideoDoViFrameInfo().level1_avg_pq, 0);
+      value = StringUtils::FormatNumber(CServiceBroker::GetDataCacheCore().GetVideoDoViFrameMetadata().level1_avg_pq, 0);
       return true;
 
     case PLAYER_PROCESS_VIDEO_DOVI_L1_MIN_NITS:
-      value = StringUtils::FormatNumber(pq_to_nits(CServiceBroker::GetDataCacheCore().GetVideoDoViFrameInfo().level1_min_pq), 4);
+      value = StringUtils::FormatNumber(pq_to_nits(CServiceBroker::GetDataCacheCore().GetVideoDoViFrameMetadata().level1_min_pq), 4);
       return true;
     case PLAYER_PROCESS_VIDEO_DOVI_L1_MAX_NITS:
-      value = StringUtils::FormatNumber(pq_to_nits(CServiceBroker::GetDataCacheCore().GetVideoDoViFrameInfo().level1_max_pq), 2);
+      value = StringUtils::FormatNumber(pq_to_nits(CServiceBroker::GetDataCacheCore().GetVideoDoViFrameMetadata().level1_max_pq), 2);
       return true;
     case PLAYER_PROCESS_VIDEO_DOVI_L1_AVG_NITS:
-      value = StringUtils::FormatNumber(pq_to_nits(CServiceBroker::GetDataCacheCore().GetVideoDoViFrameInfo().level1_avg_pq), 2);
+      value = StringUtils::FormatNumber(pq_to_nits(CServiceBroker::GetDataCacheCore().GetVideoDoViFrameMetadata().level1_avg_pq), 2);
       return true;
   
     case PLAYER_PROCESS_VIDEO_DOVI_L6_MAX_CLL:
-      value = StringUtils::FormatNumber(CServiceBroker::GetDataCacheCore().GetVideoDoViFrameInfo().level6_max_cll, 0);
+      value = StringUtils::FormatNumber(CServiceBroker::GetDataCacheCore().GetVideoDoViStreamMetadata().level6_max_cll, 0);
       return true;
     case PLAYER_PROCESS_VIDEO_DOVI_L6_MAX_FALL:
-      value = StringUtils::FormatNumber(CServiceBroker::GetDataCacheCore().GetVideoDoViFrameInfo().level6_max_fall, 0);
+      value = StringUtils::FormatNumber(CServiceBroker::GetDataCacheCore().GetVideoDoViStreamMetadata().level6_max_fall, 0);
       return true;
     case PLAYER_PROCESS_VIDEO_DOVI_L6_MIN_LUM:
-      value = StringUtils::FormatNumber((CServiceBroker::GetDataCacheCore().GetVideoDoViFrameInfo().level6_min_lum * 0.0001), 4);
+      value = StringUtils::FormatNumber((CServiceBroker::GetDataCacheCore().GetVideoDoViStreamMetadata().level6_min_lum * 0.0001), 4);
       return true;
     case PLAYER_PROCESS_VIDEO_DOVI_L6_MAX_LUM:
-      value = StringUtils::FormatNumber(CServiceBroker::GetDataCacheCore().GetVideoDoViFrameInfo().level6_max_lum, 0);
+      value = StringUtils::FormatNumber(CServiceBroker::GetDataCacheCore().GetVideoDoViStreamMetadata().level6_max_lum, 0);
       return true;    
 
     case PLAYER_PROCESS_VIDEO_HDR_MAX_CLL:

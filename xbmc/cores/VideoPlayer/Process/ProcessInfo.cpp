@@ -85,8 +85,9 @@ void CProcessInfo::ResetVideoCodecInfo()
   m_videoColorRange = AVCOL_RANGE_UNSPECIFIED;
   m_videoColorPrimaries = AVCOL_PRI_UNSPECIFIED;
   m_videoColorTransferCharacteristic = AVCOL_TRC_UNSPECIFIED;
-  m_videoDoViDecoderConfigurationRecord = {};
-  m_videoDoViFrameInfo = {};
+  m_videoDoViFrameMetadata = {};
+  m_videoDoViStreamInfo = {};
+  m_videoSourceDoViStreamInfo = {};
   m_videoDoViCodecFourCC = "";
   m_videoHDRStaticMetadataInfo = {};
   m_videoVS10Mode = DOLBY_VISION_OUTPUT_MODE_BYPASS;
@@ -116,8 +117,9 @@ void CProcessInfo::ResetVideoCodecInfo()
     m_dataCache->SetVideoColorRange(m_videoColorRange);
     m_dataCache->SetVideoColorPrimaries(m_videoColorPrimaries);
     m_dataCache->SetVideoColorTransferCharacteristic(m_videoColorTransferCharacteristic);
-    m_dataCache->SetVideoDoViDecoderConfigurationRecord(m_videoDoViDecoderConfigurationRecord);
-    m_dataCache->SetVideoDoViFrameInfo(m_videoDoViFrameInfo);
+    m_dataCache->SetVideoDoViFrameMetadata(m_videoDoViFrameMetadata);
+    m_dataCache->SetVideoDoViStreamInfo(m_videoDoViStreamInfo);
+    m_dataCache->SetVideoSourceDoViStreamInfo(m_videoSourceDoViStreamInfo);
     m_dataCache->SetVideoDoViCodecFourCC(m_videoDoViCodecFourCC);
     m_dataCache->SetVideoHDRStaticMetadataInfo(m_videoHDRStaticMetadataInfo);
     m_dataCache->SetVideoVS10Mode(m_videoVS10Mode);
@@ -341,38 +343,72 @@ AVColorTransferCharacteristic CProcessInfo::GetVideoColorTransferCharacteristic(
   return m_videoColorTransferCharacteristic;
 }
 
-void CProcessInfo::SetVideoDoViDecoderConfigurationRecord(AVDOVIDecoderConfigurationRecord doViDecoderConfigurationRecord)
+void CProcessInfo::SetVideoDoViFrameMetadata(DOVIFrameMetadata value)
 {
   std::unique_lock<CCriticalSection> lock(m_videoCodecSection);
 
-  m_videoDoViDecoderConfigurationRecord = doViDecoderConfigurationRecord;
+  m_videoDoViFrameMetadata = value;
 
   if (m_dataCache)
-    m_dataCache->SetVideoDoViDecoderConfigurationRecord(m_videoDoViDecoderConfigurationRecord);
+    m_dataCache->SetVideoDoViFrameMetadata(m_videoDoViFrameMetadata);
 }
 
-AVDOVIDecoderConfigurationRecord CProcessInfo::GetVideoDoViDecoderConfigurationRecord()
+DOVIFrameMetadata CProcessInfo::GetVideoDoViFrameMetadata()
 {
   std::unique_lock<CCriticalSection> lock(m_videoCodecSection);
 
-  return m_videoDoViDecoderConfigurationRecord;
+  return m_videoDoViFrameMetadata;
 }
 
-void CProcessInfo::SetVideoDoViFrameInfo(DOVIFrameInfo value)
+void CProcessInfo::SetVideoDoViStreamMetadata(DOVIStreamMetadata value)
 {
   std::unique_lock<CCriticalSection> lock(m_videoCodecSection);
 
-  m_videoDoViFrameInfo = value;
+  m_videoDoViStreamMetadata = value;
 
   if (m_dataCache)
-    m_dataCache->SetVideoDoViFrameInfo(m_videoDoViFrameInfo);
+    m_dataCache->SetVideoDoViStreamMetadata(m_videoDoViStreamMetadata);
 }
 
-DOVIFrameInfo CProcessInfo::GetVideoDoViFrameInfo()
+DOVIStreamMetadata CProcessInfo::GetVideoDoViStreamMetadata()
 {
   std::unique_lock<CCriticalSection> lock(m_videoCodecSection);
 
-  return m_videoDoViFrameInfo;
+  return m_videoDoViStreamMetadata;
+}
+
+void CProcessInfo::SetVideoDoViStreamInfo(DOVIStreamInfo value)
+{
+  std::unique_lock<CCriticalSection> lock(m_videoCodecSection);
+
+  m_videoDoViStreamInfo = value;
+
+  if (m_dataCache)
+    m_dataCache->SetVideoDoViStreamInfo(m_videoDoViStreamInfo);
+}
+
+DOVIStreamInfo CProcessInfo::GetVideoDoViStreamInfo()
+{
+  std::unique_lock<CCriticalSection> lock(m_videoCodecSection);
+
+  return m_videoDoViStreamInfo;
+}
+
+void CProcessInfo::SetVideoSourceDoViStreamInfo(DOVIStreamInfo value)
+{
+  std::unique_lock<CCriticalSection> lock(m_videoCodecSection);
+
+  m_videoSourceDoViStreamInfo = value;
+
+  if (m_dataCache)
+    m_dataCache->SetVideoSourceDoViStreamInfo(m_videoSourceDoViStreamInfo);
+}
+
+DOVIStreamInfo CProcessInfo::GetVideoSourceDoViStreamInfo()
+{
+  std::unique_lock<CCriticalSection> lock(m_videoCodecSection);
+
+  return m_videoSourceDoViStreamInfo;
 }
 
 void CProcessInfo::SetVideoDoViCodecFourCC(std::string codecFourCC)

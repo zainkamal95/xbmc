@@ -4182,7 +4182,7 @@
           </dependencies>
           <constraints>
             <options>
-              <option label="39300">0</option>  <!-- Lossless (off) -->
+              <option label="39300">0</option>  <!-- None (off) -->
               <option label="39301">1</option>  <!-- ToMel -->
               <option label="39302">2</option>  <!-- To81 -->
             </options>

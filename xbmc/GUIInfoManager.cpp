@@ -1243,6 +1243,11 @@ const infomap player_process[] = {{"videodecoder", PLAYER_PROCESS_VIDEODECODER},
                                   {"video.dovi.bl.present", PLAYER_PROCESS_VIDEO_DOVI_BL_PRESENT },
                                   {"video.dovi.bl.signal.compatibility", PLAYER_PROCESS_VIDEO_DOVI_BL_SIGNAL_COMPATIBILITY },
 
+                                  {"video.source.dovi.profile", PLAYER_PROCESS_VIDEO_SOURCE_DOVI_PROFILE },
+                                  {"video.source.dovi.el.present", PLAYER_PROCESS_VIDEO_SOURCE_DOVI_EL_PRESENT },
+                                  {"video.source.dovi.el.type", PLAYER_PROCESS_VIDEO_SOURCE_DOVI_EL_TYPE },
+                                  {"video.source.dovi.bl.signal.compatibility", PLAYER_PROCESS_VIDEO_SOURCE_DOVI_BL_SIGNAL_COMPATIBILITY },
+
                                   {"video.dovi.codec.fourcc", PLAYER_PROCESS_VIDEO_DOVI_CODEC_FOURCC },
                                   {"video.dovi.codec.string", PLAYER_PROCESS_VIDEO_DOVI_CODEC_STRING },
 

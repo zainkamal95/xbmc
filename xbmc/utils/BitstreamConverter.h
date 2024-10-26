@@ -89,13 +89,9 @@ typedef struct
 
 enum DOVIMode : int
 {
-  MODE_NONE = -1,
-  MODE_LOSSLESS = 0,
+  MODE_NONE = 0,
   MODE_TOMEL,
-  MODE_TO81,
-  MODE_PROFILE5TO81,
-  MODE_TO84,
-  MODE_TO81MAPPINGPRESERVED
+  MODE_TO81
 };
 
 class CBitstreamParser
