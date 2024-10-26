@@ -23999,13 +23999,13 @@ msgstr ""
 #. Title of Dolby Vision RPU conversion setting
 #: system/settings/settings.xml
 msgctxt "#39196"
-msgid "Dolby Vision compatibility mode"
+msgid "Convert profile 7"
 msgstr ""
 
 #. Help text for setting "Convert Dolby Vision for compatibility" of label #39196
 #: system/settings/settings.xml
 msgctxt "#39197"
-msgid "If enabled, Dolby Vision profile 7 will be converted to profile 8.1, which is more commonly supported by devices. Enable if your device supports Dolby Vision, but has issues with some videos."
+msgid "Convert Dolby Vision profile 7 to profile 7 MEL or profile 8.1"
 msgstr ""
 
 #. Title of "Allowed HDR dynamic metadata formats" setting
@@ -24035,31 +24035,19 @@ msgstr ""
 #. Dolby Vision RPU Conversion
 #: system/settings/settings.xml
 msgctxt "#39300"
-msgid "Lossless"
+msgid "off"
 msgstr ""
 
 #. Dolby Vision RPU Conversion
 #: system/settings/settings.xml
 msgctxt "#39301"
-msgid "To MEL"
+msgid "to MEL"
 msgstr ""
 
 #. Dolby Vision RPU Conversion
 #: system/settings/settings.xml
 msgctxt "#39302"
-msgid "To Profile 8.1"
-msgstr ""
-
-#. Dolby Vision RPU Conversion
-#: system/settings/settings.xml
-msgctxt "#39303"
-msgid "To Profile 8.4"
-msgstr ""
-
-#. Dolby Vision RPU Conversion
-#: system/settings/settings.xml
-msgctxt "#39304"
-msgid "To Profile 8.1 Mapping Preserved"
+msgid "to profile 8.1"
 msgstr ""
 
 # 40000 to 40800 are reserved for Video Versions feature
