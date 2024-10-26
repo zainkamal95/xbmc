@@ -227,7 +227,7 @@ static uint32_t calc_crc32(const void *data, size_t data_size)
 
 std::vector<uint8_t> create_rpu_nalu(VdrDmData& vdr_dm_data) {
 
-  // Dolby Vision Profile 8.1 133 Bytes long.
+  // Dolby Vision profile 8.1 133 Bytes long.
   BitstreamIoWriter writer(133);
 
   writer.write_n<uint8_t>(0x19, 8);  // RPU prefix

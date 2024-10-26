@@ -24906,13 +24906,13 @@ msgstr ""
 #. "Dolby Vision HDR10+"
 #: system/settings/settings.xml
 msgctxt "#50101"
-msgid "Dynamic HDR10+ to Dolby Vision Profile 8.1 conversion"
+msgid "Dynamic HDR10+ to Dolby Vision profile 8.1 conversion"
 msgstr ""
 
 #. "Dolby Vision HDR10+"
 #: system/settings/settings.xml
 msgctxt "#50102"
-msgid "Dynamically convert HDR10+ to Dolby Vision Profile 8.1 on playback. (port from dovi_tool Aug. 2024)"
+msgid "Dynamically convert HDR10+ to Dolby Vision profile 8.1 on playback. (port from dovi_tool Aug. 2024)"
 msgstr ""
 
 #. "Dolby Vision HDR10+"
@@ -24924,7 +24924,7 @@ msgstr ""
 #. "Dolby Vision HDR10+"
 #: system/settings/settings.xml
 msgctxt "#50104"
-msgid "Source for Peak Brightness when converting from HDR10+ to Dolby Vision Profile 8.1. (port from dovi_tool Aug. 2024)"
+msgid "Source for Peak Brightness when converting from HDR10+ to Dolby Vision profile 8.1. (port from dovi_tool Aug. 2024)"
 msgstr ""
 
 #. "Dolby Vision HDR10+"
