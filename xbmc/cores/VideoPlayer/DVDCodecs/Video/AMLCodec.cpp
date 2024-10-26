@@ -2030,25 +2030,25 @@ bool CAMLCodec::OpenDecoder(CDVDStreamInfo &hints)
   if (am_private->video_codec_type == VIDEO_DEC_FORMAT_UNKNOW)
     am_private->video_codec_type = codec_tag_to_vdec_type(am_private->video_codec_id);
 
-  CLog::Log(LOGDEBUG, "CAMLCodec::OpenDecoder "
+  CLog::Log(LOGINFO, "CAMLCodec::OpenDecoder "
     "hints.width({:d}), hints.height({:d}), hints.codec({:d}), hints.codec_tag({:d}), hints.bitdepth({:d})",
     hints.width, hints.height, hints.codec, hints.codec_tag, hints.bitdepth);
-  CLog::Log(LOGDEBUG, "CAMLCodec::OpenDecoder hints.fpsrate({:d}), hints.fpsscale({:d}), video_rate({:d})",
+  CLog::Log(LOGINFO, "CAMLCodec::OpenDecoder hints.fpsrate({:d}), hints.fpsscale({:d}), video_rate({:d})",
     hints.fpsrate, hints.fpsscale, am_private->video_rate);
-  CLog::Log(LOGDEBUG, "CAMLCodec::OpenDecoder hints.aspect({:f}), video_ratio.num({:d}), video_ratio.den({:d})",
+  CLog::Log(LOGINFO, "CAMLCodec::OpenDecoder hints.aspect({:f}), video_ratio.num({:d}), video_ratio.den({:d})",
     hints.aspect, video_ratio.num, video_ratio.den);
-  CLog::Log(LOGDEBUG, "CAMLCodec::OpenDecoder hints.orientation({:d}), hints.forced_aspect({:d}), hints.extrasize({:d})",
+  CLog::Log(LOGINFO, "CAMLCodec::OpenDecoder hints.orientation({:d}), hints.forced_aspect({:d}), hints.extrasize({:d})",
     hints.orientation, hints.forced_aspect, hints.extradata.GetSize());
 
   std::string hdrType = CStreamDetails::HdrTypeToString(hints.hdrType);
   if (hdrType.size())
-    CLog::Log(LOGDEBUG, "CAMLCodec::OpenDecoder hdr type: {}", hdrType);
+    CLog::Log(LOGINFO, "CAMLCodec::OpenDecoder hdr type: {}", hdrType);
   if (hints.hdrType == StreamHdrType::HDR_TYPE_DOLBYVISION)
-    CLog::Log(LOGDEBUG, "CAMLCodec::OpenDecoder DOVI: version {:d}.{:d}, profile {:d}, el type {:d}",
+    CLog::Log(LOGINFO, "CAMLCodec::OpenDecoder DOVI: version {:d}.{:d}, profile {:d}, el type {:d}",
       hints.dovi.dv_version_major, hints.dovi.dv_version_minor, hints.dovi.dv_profile, hints.dovi_el_type);
 
   m_processInfo.SetVideoDAR(hints.aspect);
-  CLog::Log(LOGDEBUG, "CAMLCodec::OpenDecoder decoder timeout: {:d}s",
+  CLog::Log(LOGINFO, "CAMLCodec::OpenDecoder decoder timeout: {:d}s",
     m_decoder_timeout);
 
   // default video codec params
