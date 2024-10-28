@@ -641,6 +641,19 @@ bool CPlayerGUIInfo::GetLabel(std::string& value, const CFileItem *item, int con
     case PLAYER_PROCESS_VIDEO_DOVI_L1_AVG_NITS:
       value = StringUtils::FormatNumber(pq_to_nits(CServiceBroker::GetDataCacheCore().GetVideoDoViFrameMetadata().level1_avg_pq), 2);
       return true;
+
+    case PLAYER_PROCESS_VIDEO_DOVI_SOURCE_MIN_PQ:
+      value = StringUtils::FormatNumber(CServiceBroker::GetDataCacheCore().GetVideoDoViStreamMetadata().source_min_pq, 0);
+      return true;
+    case PLAYER_PROCESS_VIDEO_DOVI_SOURCE_MAX_PQ:
+      value = StringUtils::FormatNumber(CServiceBroker::GetDataCacheCore().GetVideoDoViStreamMetadata().source_max_pq, 0);
+      return true;
+    case PLAYER_PROCESS_VIDEO_DOVI_SOURCE_MIN_NITS:
+      value = StringUtils::FormatNumber(pq_to_nits(CServiceBroker::GetDataCacheCore().GetVideoDoViStreamMetadata().source_min_pq), 2);
+      return true;
+    case PLAYER_PROCESS_VIDEO_DOVI_SOURCE_MAX_NITS:
+      value = StringUtils::FormatNumber(pq_to_nits(CServiceBroker::GetDataCacheCore().GetVideoDoViStreamMetadata().source_max_pq), 2);
+      return true;
   
     case PLAYER_PROCESS_VIDEO_DOVI_L6_MAX_CLL:
       value = StringUtils::FormatNumber(CServiceBroker::GetDataCacheCore().GetVideoDoViStreamMetadata().level6_max_cll, 0);
