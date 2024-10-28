@@ -329,7 +329,7 @@ static void get_dovi_rpu_info(uint8_t* nal_buf, uint32_t nal_size, bool first_fr
 
   const DoviVdrDmData* vdr_dm_data = dovi_rpu_get_vdr_dm_data(rpuOpaque);
 
-  if (vdr_dm_data->dm_data.level1)
+  if (vdr_dm_data && vdr_dm_data->dm_data.level1)
   {
     DOVIFrameMetadata dovi_frame_metadata;
     dovi_frame_metadata.level1_min_pq = vdr_dm_data->dm_data.level1->min_pq;
@@ -341,7 +341,14 @@ static void get_dovi_rpu_info(uint8_t* nal_buf, uint32_t nal_size, bool first_fr
   if (first_frame) {
 
     DOVIStreamMetadata dovi_stream_metadata;
-    if (vdr_dm_data->dm_data.level6)
+
+    if (vdr_dm_data) 
+    {
+      dovi_stream_metadata.source_min_pq = vdr_dm_data->source_min_pq;
+      dovi_stream_metadata.source_max_pq = vdr_dm_data->source_max_pq;
+    }
+
+    if (vdr_dm_data && vdr_dm_data->dm_data.level6)
     {
       dovi_stream_metadata.level6_max_lum = vdr_dm_data->dm_data.level6->max_display_mastering_luminance;
       dovi_stream_metadata.level6_min_lum = vdr_dm_data->dm_data.level6->min_display_mastering_luminance;
@@ -351,7 +358,7 @@ static void get_dovi_rpu_info(uint8_t* nal_buf, uint32_t nal_size, bool first_fr
     }
     
     std::string meta_version = "";
-    if (vdr_dm_data->dm_data.level254)
+    if (vdr_dm_data && vdr_dm_data->dm_data.level254)
     {
       unsigned int noL8 = vdr_dm_data->dm_data.level8.len;
       if (noL8 > 0)
@@ -364,7 +371,7 @@ static void get_dovi_rpu_info(uint8_t* nal_buf, uint32_t nal_size, bool first_fr
                                   vdr_dm_data->dm_data.level254->dm_version_index, 
                                   vdr_dm_data->dm_data.level254->dm_mode);
     }
-    else if (vdr_dm_data->dm_data.level1)
+    else if (vdr_dm_data && vdr_dm_data->dm_data.level1)
     {
       unsigned int noL2 = vdr_dm_data->dm_data.level2.len;
       if (noL2 > 0)
