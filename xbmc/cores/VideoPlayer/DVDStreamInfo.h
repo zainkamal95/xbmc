@@ -41,6 +41,9 @@ struct DOVIFrameMetadata
 
 struct DOVIStreamMetadata
 {
+  uint16_t source_min_pq = 0;
+  uint16_t source_max_pq = 0;
+
   uint16_t level6_max_lum = 0;
   uint16_t level6_min_lum = 0;
 
