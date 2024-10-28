@@ -1262,6 +1262,11 @@ const infomap player_process[] = {{"videodecoder", PLAYER_PROCESS_VIDEODECODER},
                                   {"video.dovi.l1.max.nits", PLAYER_PROCESS_VIDEO_DOVI_L1_MAX_NITS },
                                   {"video.dovi.l1.avg.nits", PLAYER_PROCESS_VIDEO_DOVI_L1_AVG_NITS },
 
+                                  {"video.dovi.source.min.pq", PLAYER_PROCESS_VIDEO_DOVI_SOURCE_MIN_PQ },
+                                  {"video.dovi.source.max.pq", PLAYER_PROCESS_VIDEO_DOVI_SOURCE_MAX_PQ },
+                                  {"video.dovi.source.min.nits", PLAYER_PROCESS_VIDEO_DOVI_SOURCE_MIN_NITS },
+                                  {"video.dovi.source.max.nits", PLAYER_PROCESS_VIDEO_DOVI_SOURCE_MAX_NITS },
+
                                   {"video.dovi.l6.max.cll", PLAYER_PROCESS_VIDEO_DOVI_L6_MAX_CLL },
                                   {"video.dovi.l6.max.fall", PLAYER_PROCESS_VIDEO_DOVI_L6_MAX_FALL },
                                   {"video.dovi.l6.min.lum", PLAYER_PROCESS_VIDEO_DOVI_L6_MIN_LUM },
