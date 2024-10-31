@@ -305,20 +305,32 @@ constexpr double ST2084_C1 = 3424.0 / 4096.0;
 constexpr double ST2084_C2 = (2413.0 / 4096.0) * 32.0;
 constexpr double ST2084_C3 = (2392.0 / 4096.0) * 32.0;
 
-static double pq_to_nits(double pq) {
-    // Normalize 12-bit PQ value to 0-1 range
-    double pq_normalized = pq / 4095.0;
-    
-    double pq_pow = std::pow(pq_normalized, 1.0 / ST2084_M2);
-    double num = std::max(pq_pow - ST2084_C1, 0.0);
-    double den = ST2084_C2 - ST2084_C3 * pq_pow;
-    
-    // Protect against division by zero
-    if (std::abs(den) < std::numeric_limits<double>::epsilon()) {
-        return 0.0;
-    }
-    
-    return ST2084_Y_MAX * std::pow(num / den, 1.0 / ST2084_M1);
+static double pq_to_nits(uint16_t pq) {
+
+  // short circuit for well known PQ to nits (eliminate rounding from original 12 bit quantization)
+  switch (pq) {
+    case 0:    { return 0; }
+    case 7:    { return 0.0001; }
+    case 62:   { return 0.0050; }
+    case 3079: { return 1000; }
+    case 3388: { return 2000; }
+    case 3696: { return 4000; }
+    case 4095: { return 10000; }
+  }
+
+  // Normalize 12-bit PQ value to 0-1 range
+  double pq_normalized = pq / 4095.0;
+  
+  double pq_pow = std::pow(pq_normalized, 1.0 / ST2084_M2);
+  double num = std::max(pq_pow - ST2084_C1, 0.0);
+  double den = ST2084_C2 - ST2084_C3 * pq_pow;
+  
+  // Protect against division by zero
+  if (std::abs(den) < std::numeric_limits<double>::epsilon()) {
+    return 0.0;
+  }
+  
+  return ST2084_Y_MAX * std::pow(num / den, 1.0 / ST2084_M1);
 }
 
 bool CPlayerGUIInfo::GetLabel(std::string& value, const CFileItem *item, int contextWindow, const CGUIInfo &info, std::string *fallback) const
