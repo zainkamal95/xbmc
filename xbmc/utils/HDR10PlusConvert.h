@@ -28,6 +28,9 @@ struct VdrDmData {
   uint16_t max_pq;
   uint16_t avg_pq;
 
+  uint16_t source_min_pq;
+  uint16_t source_max_pq;
+
   uint16_t max_display_mastering_luminance;
   uint16_t min_display_mastering_luminance;
   uint16_t max_content_light_level;

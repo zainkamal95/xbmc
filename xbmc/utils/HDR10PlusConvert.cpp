@@ -143,6 +143,18 @@ std::vector<uint8_t> create_rpu_nalu_for_hdr10plus(
     min_pq = 62;
   }
 
+  uint16_t source_min_pq = min_pq;
+  uint16_t source_max_pq = 3079;
+  switch (hdrStaticMetadataInfo.max_lum) {
+      case 0:     { source_max_pq = 3079; break; }
+      case 1000:  { source_max_pq = 3079; break; }
+      case 2000:  { source_max_pq = 3388; break; }
+      case 4000:  { source_max_pq = 3696; break; }
+      case 10000: { source_max_pq = 4095; break; }
+      default:    { source_max_pq = cast_pq(hdrStaticMetadataInfo.max_lum); break; }
+  }
+  //uint16_t source_max_pq = cast_pq(hdrStaticMetadataInfo.max_lum);
+
   uint16_t max_pq = maximum_pq(meta, peak_source);
   if (max_pq == 0) {
     switch (hdrStaticMetadataInfo.max_lum) {
@@ -157,15 +169,20 @@ std::vector<uint8_t> create_rpu_nalu_for_hdr10plus(
   uint16_t avg_pq = average_pq(meta, peak_source);
 
   VdrDmData vdr_dm_data = {};
+  vdr_dm_data.source_min_pq = source_min_pq;
+  vdr_dm_data.source_max_pq = source_max_pq;
   vdr_dm_data.min_pq = min_pq;
   vdr_dm_data.max_pq = clamp16(max_pq, L1_MAX_PQ_MIN_VALUE, L1_MAX_PQ_MAX_VALUE);
   vdr_dm_data.avg_pq = clamp16(avg_pq, L1_AVG_PQ_MIN_VALUE, (vdr_dm_data.max_pq - 1));
+
   vdr_dm_data.max_display_mastering_luminance = hdrStaticMetadataInfo.max_lum;
   vdr_dm_data.min_display_mastering_luminance = hdrStaticMetadataInfo.min_lum;
   vdr_dm_data.max_content_light_level = hdrStaticMetadataInfo.max_cll;
   vdr_dm_data.max_frame_average_light_level = hdrStaticMetadataInfo.max_fall;
 
-  if ((last_vdr_dm_data.min_pq != vdr_dm_data.min_pq) ||
+  if ((last_vdr_dm_data.source_min_pq != vdr_dm_data.source_min_pq) ||
+      (last_vdr_dm_data.source_max_pq != vdr_dm_data.source_max_pq) ||
+      (last_vdr_dm_data.min_pq != vdr_dm_data.min_pq) ||
       (last_vdr_dm_data.max_pq != vdr_dm_data.max_pq) ||
       (last_vdr_dm_data.avg_pq != vdr_dm_data.avg_pq) ||
       (last_vdr_dm_data.max_display_mastering_luminance != vdr_dm_data.max_display_mastering_luminance) ||
