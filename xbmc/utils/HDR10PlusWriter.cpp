@@ -128,8 +128,8 @@ void write_rpu(BitstreamIoWriter& writer, VdrDmData& vdr_dm_data) {
     writer.write_n<uint8_t>(0, 2);              // (00)     signal_chroma_format     4:2:0 ?
     writer.write_n<uint8_t>(1, 2);              // (01)     signal_full_range_flag   Full Range
 
-    writer.write_n<uint16_t>(vdr_dm_data.min_pq, 12);
-    writer.write_n<uint16_t>(vdr_dm_data.max_pq, 12);
+    writer.write_n<uint16_t>(vdr_dm_data.source_min_pq, 12);  // source min pq
+    writer.write_n<uint16_t>(vdr_dm_data.source_max_pq, 12);  // source max pq
 
     writer.write_n<uint16_t>(42, 10);           // (0000101010) source_diagonal (display diagonal in inches - TODO: Any effect?)
 
