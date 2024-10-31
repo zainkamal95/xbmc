@@ -623,62 +623,62 @@ bool CPlayerGUIInfo::GetLabel(std::string& value, const CFileItem *item, int con
       return true;
 
     case PLAYER_PROCESS_VIDEO_DOVI_L1_MIN_PQ:
-      value = StringUtils::FormatNumber(CServiceBroker::GetDataCacheCore().GetVideoDoViFrameMetadata().level1_min_pq, 0);
+      value = std::to_string(CServiceBroker::GetDataCacheCore().GetVideoDoViFrameMetadata().level1_min_pq);
       return true;
     case PLAYER_PROCESS_VIDEO_DOVI_L1_MAX_PQ:
-      value = StringUtils::FormatNumber(CServiceBroker::GetDataCacheCore().GetVideoDoViFrameMetadata().level1_max_pq, 0);
+      value = std::to_string(CServiceBroker::GetDataCacheCore().GetVideoDoViFrameMetadata().level1_max_pq);
       return true;
     case PLAYER_PROCESS_VIDEO_DOVI_L1_AVG_PQ:
-      value = StringUtils::FormatNumber(CServiceBroker::GetDataCacheCore().GetVideoDoViFrameMetadata().level1_avg_pq, 0);
+      value = std::to_string(CServiceBroker::GetDataCacheCore().GetVideoDoViFrameMetadata().level1_avg_pq);
       return true;
 
     case PLAYER_PROCESS_VIDEO_DOVI_L1_MIN_NITS:
       value = StringUtils::FormatNumber(pq_to_nits(CServiceBroker::GetDataCacheCore().GetVideoDoViFrameMetadata().level1_min_pq), 4);
       return true;
     case PLAYER_PROCESS_VIDEO_DOVI_L1_MAX_NITS:
-      value = StringUtils::FormatNumber(pq_to_nits(CServiceBroker::GetDataCacheCore().GetVideoDoViFrameMetadata().level1_max_pq), 2);
+      value = std::to_string(static_cast<int>(pq_to_nits(CServiceBroker::GetDataCacheCore().GetVideoDoViFrameMetadata().level1_max_pq)));
       return true;
     case PLAYER_PROCESS_VIDEO_DOVI_L1_AVG_NITS:
-      value = StringUtils::FormatNumber(pq_to_nits(CServiceBroker::GetDataCacheCore().GetVideoDoViFrameMetadata().level1_avg_pq), 2);
+      value = std::to_string(static_cast<int>(pq_to_nits(CServiceBroker::GetDataCacheCore().GetVideoDoViFrameMetadata().level1_avg_pq)));
       return true;
 
     case PLAYER_PROCESS_VIDEO_DOVI_SOURCE_MIN_PQ:
-      value = StringUtils::FormatNumber(CServiceBroker::GetDataCacheCore().GetVideoDoViStreamMetadata().source_min_pq, 0);
+      value = std::to_string(CServiceBroker::GetDataCacheCore().GetVideoDoViStreamMetadata().source_min_pq);
       return true;
     case PLAYER_PROCESS_VIDEO_DOVI_SOURCE_MAX_PQ:
-      value = StringUtils::FormatNumber(CServiceBroker::GetDataCacheCore().GetVideoDoViStreamMetadata().source_max_pq, 0);
+      value = std::to_string(CServiceBroker::GetDataCacheCore().GetVideoDoViStreamMetadata().source_max_pq);
       return true;
     case PLAYER_PROCESS_VIDEO_DOVI_SOURCE_MIN_NITS:
-      value = StringUtils::FormatNumber(pq_to_nits(CServiceBroker::GetDataCacheCore().GetVideoDoViStreamMetadata().source_min_pq), 2);
+      value = StringUtils::FormatNumber(pq_to_nits(CServiceBroker::GetDataCacheCore().GetVideoDoViStreamMetadata().source_min_pq), 4);
       return true;
     case PLAYER_PROCESS_VIDEO_DOVI_SOURCE_MAX_NITS:
-      value = StringUtils::FormatNumber(pq_to_nits(CServiceBroker::GetDataCacheCore().GetVideoDoViStreamMetadata().source_max_pq), 2);
+      value = std::to_string(static_cast<int>(pq_to_nits(CServiceBroker::GetDataCacheCore().GetVideoDoViStreamMetadata().source_max_pq)));
       return true;
   
     case PLAYER_PROCESS_VIDEO_DOVI_L6_MAX_CLL:
-      value = StringUtils::FormatNumber(CServiceBroker::GetDataCacheCore().GetVideoDoViStreamMetadata().level6_max_cll, 0);
+      value = std::to_string(CServiceBroker::GetDataCacheCore().GetVideoDoViStreamMetadata().level6_max_cll);
       return true;
     case PLAYER_PROCESS_VIDEO_DOVI_L6_MAX_FALL:
-      value = StringUtils::FormatNumber(CServiceBroker::GetDataCacheCore().GetVideoDoViStreamMetadata().level6_max_fall, 0);
+      value = std::to_string(CServiceBroker::GetDataCacheCore().GetVideoDoViStreamMetadata().level6_max_fall);
       return true;
     case PLAYER_PROCESS_VIDEO_DOVI_L6_MIN_LUM:
       value = StringUtils::FormatNumber((CServiceBroker::GetDataCacheCore().GetVideoDoViStreamMetadata().level6_min_lum * 0.0001), 4);
       return true;
     case PLAYER_PROCESS_VIDEO_DOVI_L6_MAX_LUM:
-      value = StringUtils::FormatNumber(CServiceBroker::GetDataCacheCore().GetVideoDoViStreamMetadata().level6_max_lum, 0);
+      value = std::to_string(CServiceBroker::GetDataCacheCore().GetVideoDoViStreamMetadata().level6_max_lum);
       return true;    
 
     case PLAYER_PROCESS_VIDEO_HDR_MAX_CLL:
-      value = StringUtils::FormatNumber(CServiceBroker::GetDataCacheCore().GetVideoHDRStaticMetadataInfo().max_cll, 0);
+      value = std::to_string(CServiceBroker::GetDataCacheCore().GetVideoHDRStaticMetadataInfo().max_cll);
       return true;
     case PLAYER_PROCESS_VIDEO_HDR_MAX_FALL:
-      value = StringUtils::FormatNumber(CServiceBroker::GetDataCacheCore().GetVideoHDRStaticMetadataInfo().max_fall, 0);
+      value = std::to_string(CServiceBroker::GetDataCacheCore().GetVideoHDRStaticMetadataInfo().max_fall);
       return true;
     case PLAYER_PROCESS_VIDEO_HDR_MIN_LUM:
       value = StringUtils::FormatNumber((CServiceBroker::GetDataCacheCore().GetVideoHDRStaticMetadataInfo().min_lum * 0.0001), 4);
       return true;
     case PLAYER_PROCESS_VIDEO_HDR_MAX_LUM:
-      value = StringUtils::FormatNumber(CServiceBroker::GetDataCacheCore().GetVideoHDRStaticMetadataInfo().max_lum, 0);
+      value = std::to_string(CServiceBroker::GetDataCacheCore().GetVideoHDRStaticMetadataInfo().max_lum);
       return true;
 
     case PLAYER_PROCESS_AML_PIXELFORMAT:
