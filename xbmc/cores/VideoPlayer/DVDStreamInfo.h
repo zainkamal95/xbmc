@@ -44,9 +44,9 @@ struct DOVIStreamMetadata
   uint16_t source_min_pq = 0;
   uint16_t source_max_pq = 0;
 
+  bool has_level6_metadata = false;
   uint16_t level6_max_lum = 0;
   uint16_t level6_min_lum = 0;
-
   uint16_t level6_max_cll = 0;
   uint16_t level6_max_fall = 0;
 
@@ -56,14 +56,18 @@ struct DOVIStreamMetadata
 struct DOVIStreamInfo
 {
   DOVIELType dovi_el_type = DOVIELType::TYPE_NONE;
+  bool has_config = false;
+  bool has_header = false;
   AVDOVIDecoderConfigurationRecord dovi = {};
 };
 
 struct HDRStaticMetadataInfo
 {
+  bool has_mdcv_metadata = false;
   uint32_t max_lum = 0;
   uint32_t min_lum = 0;
 
+  bool has_cll_metadata = false;
   uint16_t max_cll = 0;
   uint16_t max_fall = 0;
 };
@@ -128,6 +132,8 @@ public:
   AVDOVIDecoderConfigurationRecord dovi{};
   DOVIELType dovi_el_type = DOVIELType::TYPE_NONE;
   CDVDClock *pClock;
+
+  static constexpr AVDOVIDecoderConfigurationRecord empty_dovi{}; // For comparison
 
   // AUDIO
   int channels;
