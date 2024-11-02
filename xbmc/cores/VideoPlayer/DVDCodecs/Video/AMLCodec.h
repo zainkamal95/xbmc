@@ -143,6 +143,5 @@ private:
   int m_decoder_timeout;
   std::chrono::time_point<std::chrono::system_clock> m_tp_last_frame;
 
-  bool            m_buffer_level_ready;
   float           m_minimum_buffer_level;
 };
