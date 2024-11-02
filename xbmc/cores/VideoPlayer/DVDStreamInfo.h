@@ -34,6 +34,7 @@ enum DOVIELType : int
 
 struct DOVIFrameMetadata
 {
+  double pts;
   uint16_t level1_min_pq = 0;
   uint16_t level1_max_pq = 0;
   uint16_t level1_avg_pq = 0;

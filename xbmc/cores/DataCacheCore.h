@@ -12,6 +12,7 @@
 #include "EdlEdit.h"
 #include "cores/AudioEngine/Utils/AEStreamInfo.h"
 #include "threads/CriticalSection.h"
+#include "utils/AgedMap.h"
 #include "utils/BitstreamConverter.h"
 
 #include <atomic>
@@ -32,6 +33,8 @@ public:
   void SignalSubtitleInfoChange();
 
   // player video info
+  void SetVideoPts(double pts);
+  double GetVideoPts();
   void SetVideoDecoderName(std::string name, bool isHw);
   std::string GetVideoDecoderName();
   bool IsVideoHwDecoder();
@@ -255,6 +258,7 @@ protected:
   CCriticalSection m_videoPlayerSection;
   struct SPlayerVideoInfo
   {
+    double pts;
     std::string decoderName;
     bool isHwDecoder;
     std::string deintMethod;
@@ -272,8 +276,7 @@ protected:
     AVColorRange colorRange;
     AVColorPrimaries colorPrimaries;
     AVColorTransferCharacteristic colorTransferCharacteristic;
-
-    DOVIFrameMetadata doviFrameMetadata;
+    AgedMap<uint64_t, DOVIFrameMetadata> doviFrameMetadataMap;
     DOVIStreamMetadata doviStreamMetadata;
     DOVIStreamInfo doviStreamInfo;
     DOVIStreamInfo sourceDoViStreamInfo;

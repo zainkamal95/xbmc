@@ -104,6 +104,8 @@ public:
   void SetPixFormats(std::vector<AVPixelFormat> &formats);
 
   // player audio info
+  void SetVideoPts(double pts);
+  double GetVideoPts();
   void ResetAudioCodecInfo();
   void SetAudioDecoderName(const std::string &name);
   std::string GetAudioDecoderName();
@@ -178,6 +180,7 @@ protected:
   CDataCacheCore *m_dataCache = nullptr;
 
   // player video info
+  double m_videoPts;
   bool m_videoIsHWDecoder;
   std::string m_videoDecoderName;
   std::string m_videoDeintMethod;

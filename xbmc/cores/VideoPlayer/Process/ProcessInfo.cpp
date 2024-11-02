@@ -69,6 +69,7 @@ void CProcessInfo::ResetVideoCodecInfo()
 {
   std::unique_lock<CCriticalSection> lock(m_videoCodecSection);
 
+  m_videoPts = 0;
   m_videoIsHWDecoder = false;
   m_videoDecoderName = "unknown";
   m_videoDeintMethod = "unknown";
@@ -102,6 +103,7 @@ void CProcessInfo::ResetVideoCodecInfo()
 
   if (m_dataCache)
   {
+    m_dataCache->SetVideoPts(m_videoPts);
     m_dataCache->SetVideoDecoderName(m_videoDecoderName, m_videoIsHWDecoder);
     m_dataCache->SetVideoDeintMethod(m_videoDeintMethod);
     m_dataCache->SetVideoPixelFormat(m_videoPixelFormat);
@@ -127,6 +129,23 @@ void CProcessInfo::ResetVideoCodecInfo()
     m_dataCache->SetVideoQueueLevel(m_videoQueueLevel);
     m_dataCache->SetVideoQueueDataLevel(m_videoQueueDataLevel);
   }
+}
+
+void CProcessInfo::SetVideoPts(double pts)
+{
+  std::unique_lock<CCriticalSection> lock(m_videoCodecSection);
+
+  m_videoPts = pts;
+
+  if (m_dataCache)
+    m_dataCache->SetVideoPts(m_videoPts);
+}
+
+double CProcessInfo::GetVideoPts()
+{
+  std::unique_lock<CCriticalSection> lock(m_videoCodecSection);
+
+  return m_videoPts;
 }
 
 void CProcessInfo::SetVideoDecoderName(const std::string &name, bool isHw)
