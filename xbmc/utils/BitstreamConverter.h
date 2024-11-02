@@ -114,8 +114,8 @@ public:
   bool              Open(bool to_annexb);
   void              Close(void);
   bool              NeedConvert(void) const { return m_convert_bitstream; }
-  bool              Convert(uint8_t *pData, int iSize);
-  bool              Convert(uint8_t *pData_bl, int iSize_bl, uint8_t *pData_el, int iSize_el);
+  bool              Convert(uint8_t *pData, int iSize, double pts);
+  bool              Convert(uint8_t *pData_bl, int iSize_bl, uint8_t *pData_el, int iSize_el, double pts);
   uint8_t*          GetConvertBuffer(void) const;
   int               GetConvertSize() const;
   uint8_t*          GetExtraData();
@@ -142,7 +142,7 @@ protected:
   bool              IsSlice(uint8_t unit_type);
   bool              BitstreamConvertInitAVC(void *in_extradata, int in_extrasize);
   bool              BitstreamConvertInitHEVC(void *in_extradata, int in_extrasize);
-  bool              BitstreamConvert(uint8_t* pData, int iSize, uint8_t **poutbuf, int *poutbuf_size);
+  bool              BitstreamConvert(uint8_t* pData, int iSize, uint8_t **poutbuf, int *poutbuf_size, double pts);
   static void       BitstreamAllocAndCopy(uint8_t** poutbuf,
                                          int* poutbuf_size,
                                          const uint8_t* sps_pps,
@@ -159,11 +159,11 @@ protected:
   void ApplyMasteringDisplayColourVolume(const MasteringDisplayColourVolume& metadata, bool& update);
   void ApplyContentLightLevel(const ContentLightLevel& metadata, bool& update);
   void UpdateHdrStaticMetadata();
-  void AddDoViRpuNalu(const Hdr10PlusMetadata& meta, uint8_t **poutbuf, int *poutbuf_size);
+  void AddDoViRpuNalu(const Hdr10PlusMetadata& meta, uint8_t **poutbuf, int *poutbuf_size, double pts);
 
   void ProcessSeiPrefix(uint8_t *buf, int32_t nal_size, uint8_t **poutbuf, int *poutbuf_size, Hdr10PlusMetadata& meta, bool& convert_hdr10plus_meta);
-  void ProcessDoViRpu(uint8_t *buf, int32_t nal_size, uint8_t **poutbuf, int *poutbuf_size);
-  void ProcessDoViRpuWrap(uint8_t *buf, int32_t nal_size, uint8_t **poutbuf, uint32_t& poutbuf_size);
+  void ProcessDoViRpu(uint8_t *buf, int32_t nal_size, uint8_t **poutbuf, int *poutbuf_size, double pts);
+  void ProcessDoViRpuWrap(uint8_t *buf, int32_t nal_size, uint8_t **poutbuf, uint32_t& poutbuf_size, double pts);
 
   typedef struct omx_bitstream_ctx {
       uint8_t  length_size;

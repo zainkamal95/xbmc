@@ -12,6 +12,7 @@
 #include "ServiceBroker.h"
 #include "cores/EdlEdit.h"
 #include "cores/AudioEngine/Utils/AEStreamInfo.h"
+#include "utils/AgedMap.h"
 #include "utils/BitstreamConverter.h"
 
 #include <mutex>
@@ -80,6 +81,20 @@ void CDataCacheCore::SignalAudioInfoChange()
 void CDataCacheCore::SignalSubtitleInfoChange()
 {
   m_hasAVInfoChanges = true;
+}
+
+void CDataCacheCore::SetVideoPts(double pts)
+{
+  std::unique_lock<CCriticalSection> lock(m_videoPlayerSection);
+
+  m_playerVideoInfo.pts = pts;
+}
+
+double CDataCacheCore::GetVideoPts()
+{
+  std::unique_lock<CCriticalSection> lock(m_videoPlayerSection);
+
+  return m_playerVideoInfo.pts;
 }
 
 void CDataCacheCore::SetVideoDecoderName(std::string name, bool isHw)
@@ -271,14 +286,17 @@ void CDataCacheCore::SetVideoDoViFrameMetadata(DOVIFrameMetadata value)
 {
   std::unique_lock<CCriticalSection> lock(m_videoPlayerSection);
 
-  m_playerVideoInfo.doviFrameMetadata = value;
+  m_playerVideoInfo.doviFrameMetadataMap.insert(value.pts, value);
 }
 
 DOVIFrameMetadata CDataCacheCore::GetVideoDoViFrameMetadata()
 {
   std::unique_lock<CCriticalSection> lock(m_videoPlayerSection);
 
-  return m_playerVideoInfo.doviFrameMetadata;
+  auto doviFrameMetadata = m_playerVideoInfo.doviFrameMetadataMap.find(m_playerVideoInfo.pts);
+  if (doviFrameMetadata != m_playerVideoInfo.doviFrameMetadataMap.end()) 
+    return doviFrameMetadata->second;
+  return {};
 }
 
 void CDataCacheCore::SetVideoDoViStreamMetadata(DOVIStreamMetadata value)
