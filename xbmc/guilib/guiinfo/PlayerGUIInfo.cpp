@@ -711,6 +711,10 @@ bool CPlayerGUIInfo::GetLabel(std::string& value, const CFileItem *item, int con
       value = std::to_string(CServiceBroker::GetDataCacheCore().GetVideoHDRStaticMetadataInfo().max_lum);
       return true;
 
+    case PLAYER_PROCESS_VIDEO_PTS:
+      value = std::to_string(CServiceBroker::GetDataCacheCore().GetVideoPts());
+      return true;
+
     case PLAYER_PROCESS_AML_PIXELFORMAT:
       value = GetAMLConfigInfo("Colour depth") + ", " + GetAMLConfigInfo("Colourspace");
       return true;
