@@ -350,6 +350,8 @@ static void get_dovi_rpu_info(uint8_t* nal_buf, uint32_t nal_size, bool first_fr
 
     if (vdr_dm_data && vdr_dm_data->dm_data.level6)
     {
+      dovi_stream_metadata.has_level6_metadata = true;
+
       dovi_stream_metadata.level6_max_lum = vdr_dm_data->dm_data.level6->max_display_mastering_luminance;
       dovi_stream_metadata.level6_min_lum = vdr_dm_data->dm_data.level6->min_display_mastering_luminance;
       
@@ -395,7 +397,11 @@ static void get_dovi_rpu_info(uint8_t* nal_buf, uint32_t nal_size, bool first_fr
     }
 
     dovi_stream_info.dovi_el_type = dovi_el_type; 
-    dovi_stream_info.dovi = dovi;    
+    dovi_stream_info.dovi = dovi;
+
+    dovi_stream_info.has_config = (memcmp(&dovi, &CDVDStreamInfo::empty_dovi, sizeof(AVDOVIDecoderConfigurationRecord)) != 0);
+    dovi_stream_info.has_header = (header != 0);
+
     processInfo.SetVideoDoViStreamInfo(dovi_stream_info);
     dovi_rpu_free_header(header);
   }
@@ -1137,8 +1143,10 @@ bool CBitstreamConverter::IsSlice(uint8_t unit_type)
 void CBitstreamConverter::ApplyMasteringDisplayColourVolume(const MasteringDisplayColourVolume& metadata, bool& update) {
 
   if ((m_hdrStaticMetadataInfo.max_lum != metadata.maxLuminance) ||
-      (m_hdrStaticMetadataInfo.min_lum != metadata.minLuminance))
+      (m_hdrStaticMetadataInfo.min_lum != metadata.minLuminance) ||
+      !m_hdrStaticMetadataInfo.has_mdcv_metadata)
   {
+    m_hdrStaticMetadataInfo.has_mdcv_metadata = true;
     m_hdrStaticMetadataInfo.max_lum = metadata.maxLuminance;
     m_hdrStaticMetadataInfo.min_lum = metadata.minLuminance;
     update = true;
@@ -1150,8 +1158,10 @@ void CBitstreamConverter::ApplyMasteringDisplayColourVolume(const MasteringDispl
 void CBitstreamConverter::ApplyContentLightLevel(const ContentLightLevel& metadata, bool& update) {
 
   if ((m_hdrStaticMetadataInfo.max_cll != metadata.maxContentLightLevel) ||
-      (m_hdrStaticMetadataInfo.max_fall != metadata.maxFrameAverageLightLevel))
+      (m_hdrStaticMetadataInfo.max_fall != metadata.maxFrameAverageLightLevel) ||
+      !m_hdrStaticMetadataInfo.has_cll_metadata)
   {
+    m_hdrStaticMetadataInfo.has_cll_metadata = true;
     m_hdrStaticMetadataInfo.max_cll = metadata.maxContentLightLevel;
     m_hdrStaticMetadataInfo.max_fall = metadata.maxFrameAverageLightLevel;
     update = true;
@@ -1164,8 +1174,10 @@ void CBitstreamConverter::UpdateHdrStaticMetadata() {
 
   HDRStaticMetadataInfo hdrStaticMetadataInfo;
 
+  hdrStaticMetadataInfo.has_mdcv_metadata = m_hdrStaticMetadataInfo.has_mdcv_metadata;
   hdrStaticMetadataInfo.max_lum = m_hdrStaticMetadataInfo.max_lum;
-  hdrStaticMetadataInfo.min_lum = m_hdrStaticMetadataInfo.min_lum;  
+  hdrStaticMetadataInfo.min_lum = m_hdrStaticMetadataInfo.min_lum;
+  hdrStaticMetadataInfo.has_cll_metadata = m_hdrStaticMetadataInfo.has_cll_metadata;
   hdrStaticMetadataInfo.max_cll = m_hdrStaticMetadataInfo.max_cll;
   hdrStaticMetadataInfo.max_fall = m_hdrStaticMetadataInfo.max_fall;
 

@@ -582,6 +582,11 @@ bool CPlayerGUIInfo::GetLabel(std::string& value, const CFileItem *item, int con
     case PLAYER_PROCESS_VIDEO_COLOR_TRANSFER_CHARACTERISTIC:
       value = av_color_transfer_name(CServiceBroker::GetDataCacheCore().GetVideoColorTransferCharacteristic());
       return true;
+
+    case PLAYER_PROCESS_VIDEO_DOVI_HAS_CONFIG:
+      value = std::to_string(CServiceBroker::GetDataCacheCore().GetVideoDoViStreamInfo().has_config);
+      return true;
+
     case PLAYER_PROCESS_VIDEO_DOVI_VERSION_MAJOR:
       value = std::to_string(CServiceBroker::GetDataCacheCore().GetVideoDoViStreamInfo().dovi.dv_version_major);
       return true;
@@ -634,6 +639,10 @@ bool CPlayerGUIInfo::GetLabel(std::string& value, const CFileItem *item, int con
       value = CServiceBroker::GetDataCacheCore().GetVideoDoViStreamMetadata().meta_version;
       return true;
 
+    case PLAYER_PROCESS_VIDEO_DOVI_HAS_HEADER:
+      value = std::to_string(CServiceBroker::GetDataCacheCore().GetVideoDoViStreamInfo().has_header);
+      return true;
+
     case PLAYER_PROCESS_VIDEO_DOVI_L1_MIN_PQ:
       value = std::to_string(CServiceBroker::GetDataCacheCore().GetVideoDoViFrameMetadata().level1_min_pq);
       return true;
@@ -667,6 +676,9 @@ bool CPlayerGUIInfo::GetLabel(std::string& value, const CFileItem *item, int con
       value = std::to_string(static_cast<int>(pq_to_nits(CServiceBroker::GetDataCacheCore().GetVideoDoViStreamMetadata().source_max_pq)));
       return true;
   
+    case PLAYER_PROCESS_VIDEO_DOVI_HAS_L6:
+      value = std::to_string(CServiceBroker::GetDataCacheCore().GetVideoDoViStreamMetadata().has_level6_metadata);
+      return true;
     case PLAYER_PROCESS_VIDEO_DOVI_L6_MAX_CLL:
       value = std::to_string(CServiceBroker::GetDataCacheCore().GetVideoDoViStreamMetadata().level6_max_cll);
       return true;
@@ -680,11 +692,17 @@ bool CPlayerGUIInfo::GetLabel(std::string& value, const CFileItem *item, int con
       value = std::to_string(CServiceBroker::GetDataCacheCore().GetVideoDoViStreamMetadata().level6_max_lum);
       return true;    
 
+    case PLAYER_PROCESS_VIDEO_HDR_HAS_CLL:
+      value = std::to_string(CServiceBroker::GetDataCacheCore().GetVideoHDRStaticMetadataInfo().has_cll_metadata);
+      return true;
     case PLAYER_PROCESS_VIDEO_HDR_MAX_CLL:
       value = std::to_string(CServiceBroker::GetDataCacheCore().GetVideoHDRStaticMetadataInfo().max_cll);
       return true;
     case PLAYER_PROCESS_VIDEO_HDR_MAX_FALL:
       value = std::to_string(CServiceBroker::GetDataCacheCore().GetVideoHDRStaticMetadataInfo().max_fall);
+      return true;
+    case PLAYER_PROCESS_VIDEO_HDR_HAS_MDCV:
+      value = std::to_string(CServiceBroker::GetDataCacheCore().GetVideoHDRStaticMetadataInfo().has_mdcv_metadata);
       return true;
     case PLAYER_PROCESS_VIDEO_HDR_MIN_LUM:
       value = StringUtils::FormatNumber((CServiceBroker::GetDataCacheCore().GetVideoHDRStaticMetadataInfo().min_lum * 0.0001), 4);
