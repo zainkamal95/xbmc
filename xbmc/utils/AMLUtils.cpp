@@ -139,6 +139,18 @@ void aml_dv_wait_video_off(int timeout)
   }
 }
 
+int aml_blackout_policy(int new_blackout)
+{
+  CSysfsPath blackout_policy{"/sys/class/video/blackout_policy"};
+  if (blackout_policy.Exists())
+  {
+    int existing_blackout = blackout_policy.Get<int>().value();
+    blackout_policy.Set(new_blackout);
+    return existing_blackout;
+  }
+  return 0;
+}
+
 static unsigned int aml_vs10_by_hdrtype(StreamHdrType hdrType, unsigned int bitDepth)
 {
   unsigned int vs10_mode = DOLBY_VISION_OUTPUT_MODE_BYPASS;
