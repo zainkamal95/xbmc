@@ -350,7 +350,7 @@ bool CDVDVideoCodecAmlogic::Open(CDVDStreamInfo &hints, CDVDCodecOptions &option
         if (settings->GetBool(CSettings::SETTING_COREELEC_AMLOGIC_DV_HDR10PLUS_CONVERT))
         {
           PeakBrightnessSource peakBrightnessSource = static_cast<PeakBrightnessSource>(settings->GetInt(CSettings::SETTING_COREELEC_AMLOGIC_DV_HDR10PLUS_PEAK_BRIGHTNESS_SOURCE));
-          CLog::Log(LOGINFO, "{}::{} - HDR10 HEVC bitstream - if HDR10+ then will be converted to Dolby Vision P8.1 with brightness source [{:d}]",
+          CLog::Log(LOGINFO, "{}::{} - HEVC bitstream - if also HDR10+ then will be considered for conversion to Dolby Vision P8.1 with brightness source [{:d}]",
             __MODULE_NAME__, __FUNCTION__, peakBrightnessSource);
           m_bitstream->SetConvertHdr10Plus(true);
           m_bitstream->SetConvertHdr10PlusPeakBrightnessSource(peakBrightnessSource);
@@ -416,7 +416,6 @@ bool CDVDVideoCodecAmlogic::Open(CDVDStreamInfo &hints, CDVDCodecOptions &option
   m_processInfo.SetVideoDimensions(m_hints.width, m_hints.height);
   m_processInfo.SetVideoDeintMethod("hardware");
   m_processInfo.SetVideoDAR(m_hints.aspect);
-//  m_processInfo.SetVideoDAR(m_hints.aspect);
 
   m_has_keyframe = false;
 
@@ -429,7 +428,7 @@ FAIL:
 
 void CDVDVideoCodecAmlogic::Close(void)
 {
-  CLog::Log(LOGDEBUG, "{}::{}", __MODULE_NAME__, __FUNCTION__);
+  CLog::Log(LOGINFO, "{}::{}", __MODULE_NAME__, __FUNCTION__);
 
   m_videoBufferPool = nullptr;
 
