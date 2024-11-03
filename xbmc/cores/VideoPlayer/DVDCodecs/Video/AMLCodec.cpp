@@ -2326,7 +2326,7 @@ void CAMLCodec::SetVfmMap(const std::string &name, const std::string &map)
 
 void CAMLCodec::CloseDecoder()
 {
-  CLog::Log(LOGDEBUG, "CAMLCodec::CloseDecoder");
+  CLog::Log(LOGINFO, "CAMLCodec::CloseDecoder");
 
   SetPollDevice(-1);
 
