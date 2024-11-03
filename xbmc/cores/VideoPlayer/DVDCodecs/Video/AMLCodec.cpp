@@ -2330,6 +2330,8 @@ void CAMLCodec::CloseDecoder()
 
   SetPollDevice(-1);
 
+  int blackout_policy = aml_blackout_policy(1);
+
   // never leave vcodec ff/rw or paused.
   if (m_speed != DVD_PLAYSPEED_NORMAL)
   {
@@ -2348,6 +2350,9 @@ void CAMLCodec::CloseDecoder()
   CSysfsPath("/sys/class/tsync/enable", 1);
 
   aml_dv_wait_video_off(m_decoder_timeout);
+
+  // restore the saved system blackout_policy value
+  aml_blackout_policy(blackout_policy);
 
   ShowMainVideo(false);
 
@@ -2375,15 +2380,6 @@ void CAMLCodec::Reset()
 
   SetPollDevice(-1);
 
-  // set the system blackout_policy to leave the last frame showing
-  int blackout_policy = 0;
-  CSysfsPath video_blackout_policy{"/sys/class/video/blackout_policy"};
-  if (video_blackout_policy.Exists())
-  {
-    blackout_policy = video_blackout_policy.Get<int>().value();
-    video_blackout_policy.Set(0);
-  }
-
   // restore the speed (some amcodec versions require this)
   if (m_speed != DVD_PLAYSPEED_NORMAL)
   {
@@ -2403,10 +2399,6 @@ void CAMLCodec::Reset()
   am_packet_init(&am_private->am_pkt);
   am_private->am_pkt.codec = &am_private->vcodec;
   pre_header_feeding(am_private, &am_private->am_pkt);
-
-  // restore the saved system blackout_policy value
-  if (video_blackout_policy.Exists())
-    video_blackout_policy.Set(blackout_policy);
 
   // reset some interal vars
   m_cur_pts = DVD_NOPTS_VALUE;
