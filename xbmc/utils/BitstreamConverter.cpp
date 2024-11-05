@@ -18,6 +18,7 @@
 #include "BitstreamReader.h"
 #include "BitstreamWriter.h"
 #include "HevcSei.h"
+#include "HDR10.h"
 #include "HDR10Plus.h"
 #include "HDR10PlusConvert.h"
 
@@ -817,8 +818,26 @@ bool CBitstreamConverter::Convert(uint8_t *pData_bl, int iSize_bl, uint8_t *pDat
       buf += 4;
       nal_type = (buf[0] >> 1) & 0x3f;
 
-      if (nal_type != AVC_NAL_END_SEQUENCE)
+      if (nal_type != AVC_NAL_END_SEQUENCE) 
+      {
+        if (nal_type == HEVC_NAL_SEI_PREFIX) {
+
+          std::vector<uint8_t> clearBuf;
+          auto messages = CHevcSei::ParseSeiRbspUnclearedEmulation(buf, size, clearBuf);
+
+          bool updateMetadata = false;
+
+          if (auto colourVolume = CHevcSei::ExtractMasteringDisplayColourVolume(messages, clearBuf))
+            ApplyMasteringDisplayColourVolume(colourVolume.value(), updateMetadata);
+
+          if (auto lightLevel = CHevcSei::ExtractContentLightLevel(messages, clearBuf)) 
+            ApplyContentLightLevel(lightLevel.value(), updateMetadata);
+
+          if (updateMetadata) UpdateHdrStaticMetadata();
+        }
+
         BitstreamAllocAndCopy(&m_convertBuffer, &offset, buf, size, nal_type);
+      }
       else
       {
         buf_eos = buf;
@@ -1150,6 +1169,7 @@ void CBitstreamConverter::ApplyMasteringDisplayColourVolume(const MasteringDispl
     m_hdrStaticMetadataInfo.has_mdcv_metadata = true;
     m_hdrStaticMetadataInfo.max_lum = metadata.maxLuminance;
     m_hdrStaticMetadataInfo.min_lum = metadata.minLuminance;
+    m_hdrStaticMetadataInfo.colour_primaries = MasteringDisplayColourVolumeText(metadata);
     update = true;
 
     CLog::Log(LOGINFO, "CBitstreamConverter::ApplyMasteringDisplayColourVolume [{}] [{}]",  m_hdrStaticMetadataInfo.max_lum, m_hdrStaticMetadataInfo.min_lum);
