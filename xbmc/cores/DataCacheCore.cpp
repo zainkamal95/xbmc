@@ -293,7 +293,7 @@ DOVIFrameMetadata CDataCacheCore::GetVideoDoViFrameMetadata()
 {
   std::unique_lock<CCriticalSection> lock(m_videoPlayerSection);
 
-  auto doviFrameMetadata = m_playerVideoInfo.doviFrameMetadataMap.find(m_playerVideoInfo.pts);
+  auto doviFrameMetadata = m_playerVideoInfo.doviFrameMetadataMap.findOrLatest(m_playerVideoInfo.pts);
   if (doviFrameMetadata != m_playerVideoInfo.doviFrameMetadataMap.end()) 
     return doviFrameMetadata->second;
   return {};
