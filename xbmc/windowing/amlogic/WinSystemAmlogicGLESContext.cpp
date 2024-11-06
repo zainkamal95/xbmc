@@ -85,11 +85,12 @@ bool CWinSystemAmlogicGLESContext::CreateNewWindow(const std::string& name,
     cur_fractional_rate = amhdmitx0_frac_rate_policy.Get<int>().value();
   }
 
+  // If changing in or out of Dolby Vision and it is on then make sure we do a mode swtich - TODO: combine with DV InfoFrame?
   StreamHdrType hdrType = CServiceBroker::GetWinSystem()->GetGfxContext().GetHDRType();
-  bool force_mode_switch_by_dv = false;
-  if ((m_hdrType == StreamHdrType::HDR_TYPE_DOLBYVISION && hdrType != StreamHdrType::HDR_TYPE_DOLBYVISION) ||
-      (m_hdrType != StreamHdrType::HDR_TYPE_DOLBYVISION && hdrType == StreamHdrType::HDR_TYPE_DOLBYVISION))
-      force_mode_switch_by_dv = true;
+  bool force_mode_switch_by_dv = 
+      ((hdrType != m_hdrType) &&
+       ((hdrType == StreamHdrType::HDR_TYPE_DOLBYVISION) || (m_hdrType == StreamHdrType::HDR_TYPE_DOLBYVISION)) &&
+       (aml_dv_mode() != DV_MODE_OFF));
 
   // get current used resolution
   if (!aml_get_native_resolution(&current_resolution))
