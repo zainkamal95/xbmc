@@ -1284,6 +1284,7 @@ const infomap player_process[] = {{"videodecoder", PLAYER_PROCESS_VIDEODECODER},
                                   {"video.hdr.has.mdcv", PLAYER_PROCESS_VIDEO_HDR_HAS_MDCV },
                                   {"video.hdr.min.lum", PLAYER_PROCESS_VIDEO_HDR_MIN_LUM },
                                   {"video.hdr.max.lum", PLAYER_PROCESS_VIDEO_HDR_MAX_LUM },
+                                  {"video.hdr.colour.primaries", PLAYER_PROCESS_VIDEO_HDR_COLOUR_PRIMARIES },
 
                                   {"video.pts", PLAYER_PROCESS_VIDEO_PTS },
 

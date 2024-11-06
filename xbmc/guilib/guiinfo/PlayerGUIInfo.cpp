@@ -710,6 +710,9 @@ bool CPlayerGUIInfo::GetLabel(std::string& value, const CFileItem *item, int con
     case PLAYER_PROCESS_VIDEO_HDR_MAX_LUM:
       value = std::to_string(CServiceBroker::GetDataCacheCore().GetVideoHDRStaticMetadataInfo().max_lum);
       return true;
+    case PLAYER_PROCESS_VIDEO_HDR_COLOUR_PRIMARIES:
+      value = CServiceBroker::GetDataCacheCore().GetVideoHDRStaticMetadataInfo().colour_primaries;
+      return true;
 
     case PLAYER_PROCESS_VIDEO_PTS:
       value = std::to_string(CServiceBroker::GetDataCacheCore().GetVideoPts());
