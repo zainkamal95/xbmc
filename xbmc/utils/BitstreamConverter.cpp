@@ -1256,9 +1256,14 @@ void CBitstreamConverter::ProcessSeiPrefix(uint8_t *buf, int32_t nal_size, uint8
 
     bool considerAsHdr10Plus = ((m_intial_hdrType == StreamHdrType::HDR_TYPE_HDR10) || m_prefer_Hdr10Plus_conversion);
 
-    if (considerAsHdr10Plus && m_first_frame) {
-      m_hints.hdrType = StreamHdrType::HDR_TYPE_HDR10PLUS;
-      m_processInfo.SetVideoSourceHdrType(StreamHdrType::HDR_TYPE_HDR10PLUS);
+    if (m_first_frame) {
+      if (considerAsHdr10Plus) {
+        m_hints.hdrType = StreamHdrType::HDR_TYPE_HDR10PLUS;
+        m_processInfo.SetVideoSourceHdrType(StreamHdrType::HDR_TYPE_HDR10PLUS);      
+        if (m_intial_hdrType == StreamHdrType::HDR_TYPE_DOLBYVISION) m_processInfo.SetVideoSourceAdditionalHdrType(StreamHdrType::HDR_TYPE_DOLBYVISION);
+      } else {        
+        if (m_intial_hdrType == StreamHdrType::HDR_TYPE_DOLBYVISION) m_processInfo.SetVideoSourceAdditionalHdrType(StreamHdrType::HDR_TYPE_HDR10PLUS);
+      }
     }
 
     bool convert = (considerAsHdr10Plus && m_convert_Hdr10Plus);

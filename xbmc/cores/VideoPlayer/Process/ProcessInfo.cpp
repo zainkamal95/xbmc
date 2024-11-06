@@ -82,6 +82,7 @@ void CProcessInfo::ResetVideoCodecInfo()
   m_videoBitDepth = 0;
   m_videoHdrType = StreamHdrType::HDR_TYPE_NONE;
   m_videoSourceHdrType = StreamHdrType::HDR_TYPE_NONE;
+  m_videoSourceAdditionalHdrType = StreamHdrType::HDR_TYPE_NONE;
   m_videoColorSpace = AVCOL_SPC_UNSPECIFIED;
   m_videoColorRange = AVCOL_RANGE_UNSPECIFIED;
   m_videoColorPrimaries = AVCOL_PRI_UNSPECIFIED;
@@ -115,6 +116,7 @@ void CProcessInfo::ResetVideoCodecInfo()
     m_dataCache->SetVideoBitDepth(m_videoBitDepth);
     m_dataCache->SetVideoHdrType(m_videoHdrType);
     m_dataCache->SetVideoSourceHdrType(m_videoSourceHdrType);
+    m_dataCache->SetVideoSourceAdditionalHdrType(m_videoSourceAdditionalHdrType);
     m_dataCache->SetVideoColorSpace(m_videoColorSpace);
     m_dataCache->SetVideoColorRange(m_videoColorRange);
     m_dataCache->SetVideoColorPrimaries(m_videoColorPrimaries);
@@ -292,6 +294,23 @@ StreamHdrType CProcessInfo::GetVideoSourceHdrType()
   std::unique_lock<CCriticalSection> lock(m_videoCodecSection);
 
   return m_videoSourceHdrType;
+}
+
+void CProcessInfo::SetVideoSourceAdditionalHdrType(StreamHdrType hdrType)
+{
+  std::unique_lock<CCriticalSection> lock(m_videoCodecSection);
+
+  m_videoSourceAdditionalHdrType = hdrType;
+
+  if (m_dataCache)
+    m_dataCache->SetVideoSourceAdditionalHdrType(m_videoSourceAdditionalHdrType);
+}
+
+StreamHdrType CProcessInfo::GetVideoSourceAdditionalHdrType()
+{
+  std::unique_lock<CCriticalSection> lock(m_videoCodecSection);
+
+  return m_videoSourceAdditionalHdrType;
 }
 
 void CProcessInfo::SetVideoColorSpace(AVColorSpace colorSpace)

@@ -57,6 +57,8 @@ public:
   StreamHdrType GetVideoHdrType();
   void SetVideoSourceHdrType(StreamHdrType hdrType);
   StreamHdrType GetVideoSourceHdrType();
+  void SetVideoSourceAdditionalHdrType(StreamHdrType hdrType);
+  StreamHdrType GetVideoSourceAdditionalHdrType();
   void SetVideoColorSpace(AVColorSpace colorSpace);
   AVColorSpace GetVideoColorSpace();
   void SetVideoColorRange(AVColorRange colorRange);
@@ -272,6 +274,7 @@ protected:
     int bitDepth;
     StreamHdrType hdrType;
     StreamHdrType sourceHdrType;
+    StreamHdrType sourceAdditionalHdrType;
     AVColorSpace colorSpace;
     AVColorRange colorRange;
     AVColorPrimaries colorPrimaries;
