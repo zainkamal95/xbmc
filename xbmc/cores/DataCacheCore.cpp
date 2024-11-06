@@ -226,6 +226,20 @@ StreamHdrType CDataCacheCore::GetVideoSourceHdrType()
   return m_playerVideoInfo.sourceHdrType;
 }
 
+void CDataCacheCore::SetVideoSourceAdditionalHdrType(StreamHdrType hdrType)
+{
+  std::unique_lock<CCriticalSection> lock(m_videoPlayerSection);
+
+  m_playerVideoInfo.sourceAdditionalHdrType = hdrType;
+}
+
+StreamHdrType CDataCacheCore::GetVideoSourceAdditionalHdrType()
+{
+  std::unique_lock<CCriticalSection> lock(m_videoPlayerSection);
+
+  return m_playerVideoInfo.sourceAdditionalHdrType;
+}
+
 void CDataCacheCore::SetVideoColorSpace(AVColorSpace colorSpace)
 {
   std::unique_lock<CCriticalSection> lock(m_videoPlayerSection);
