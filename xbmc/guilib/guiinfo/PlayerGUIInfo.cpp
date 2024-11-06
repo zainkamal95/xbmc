@@ -564,6 +564,9 @@ bool CPlayerGUIInfo::GetLabel(std::string& value, const CFileItem *item, int con
     case PLAYER_PROCESS_VIDEO_SOURCE_HDR_TYPE:
       value = HdrTypeToString(CServiceBroker::GetDataCacheCore().GetVideoSourceHdrType());
       return true;
+    case PLAYER_PROCESS_VIDEO_SOURCE_ADDITIONAL_HDR_TYPE:
+      value = HdrTypeToString(CServiceBroker::GetDataCacheCore().GetVideoSourceAdditionalHdrType());
+      return true;
     case PLAYER_PROCESS_VIDEO_WIDTH_RAW:
       value = std::to_string(CServiceBroker::GetDataCacheCore().GetVideoWidth());
       return true;
