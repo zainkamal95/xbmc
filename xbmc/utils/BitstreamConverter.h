@@ -159,12 +159,16 @@ protected:
   void ApplyMasteringDisplayColourVolume(const MasteringDisplayColourVolume& metadata, bool& update);
   void ApplyContentLightLevel(const ContentLightLevel& metadata, bool& update);
   void UpdateHdrStaticMetadata();
+  
+  void AddDoViRpuNaluWrap(const Hdr10PlusMetadata& meta, uint8_t **poutbuf, uint32_t& poutbuf_size, double pts);
   void AddDoViRpuNalu(const Hdr10PlusMetadata& meta, uint8_t **poutbuf, int *poutbuf_size, double pts);
 
+  void ProcessSeiPrefixWrap(uint8_t *buf, int32_t nal_size, uint8_t **poutbuf, uint32_t& poutbuf_size, Hdr10PlusMetadata& meta, bool& convert_hdr10plus_meta);
   void ProcessSeiPrefix(uint8_t *buf, int32_t nal_size, uint8_t **poutbuf, int *poutbuf_size, Hdr10PlusMetadata& meta, bool& convert_hdr10plus_meta);
-  void ProcessDoViRpu(uint8_t *buf, int32_t nal_size, uint8_t **poutbuf, int *poutbuf_size, double pts);
+  
   void ProcessDoViRpuWrap(uint8_t *buf, int32_t nal_size, uint8_t **poutbuf, uint32_t& poutbuf_size, double pts);
-
+  void ProcessDoViRpu(uint8_t *buf, int32_t nal_size, uint8_t **poutbuf, int *poutbuf_size, double pts);
+  
   typedef struct omx_bitstream_ctx {
       uint8_t  length_size;
       uint8_t  first_idr;

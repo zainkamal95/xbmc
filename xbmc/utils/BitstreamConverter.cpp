@@ -807,44 +807,37 @@ bool CBitstreamConverter::Convert(uint8_t *pData_bl, int iSize_bl, uint8_t *pDat
     else
       buf = pData_bl;
 
+    Hdr10PlusMetadata hdr10plus_meta;
+    bool convert_hdr10plus_meta = false;
+
     // process bl frame data
     start = buf;
     end = buf + bl_frame_nal_buf_size;
     while (end - buf > 4)
     {
       uint32_t size;
-      uint8_t  nal_type;
+      uint8_t nal_type;
       size = std::min<uint32_t>(BS_RB32(buf), end - buf - 4);
       buf += 4;
       nal_type = (buf[0] >> 1) & 0x3f;
 
-      if (nal_type != AVC_NAL_END_SEQUENCE) 
-      {
-        if (nal_type == HEVC_NAL_SEI_PREFIX) {
+      switch (nal_type) {
 
-          std::vector<uint8_t> clearBuf;
-          auto messages = CHevcSei::ParseSeiRbspUnclearedEmulation(buf, size, clearBuf);
+        case HEVC_NAL_SEI_PREFIX:
+          ProcessSeiPrefixWrap(buf, size, &m_convertBuffer, offset, hdr10plus_meta, convert_hdr10plus_meta); 
+          break;
 
-          bool updateMetadata = false;
+        case AVC_NAL_END_SEQUENCE: 
+          buf_eos = buf;
+          size_eos = size;
+          break;
 
-          if (auto colourVolume = CHevcSei::ExtractMasteringDisplayColourVolume(messages, clearBuf))
-            ApplyMasteringDisplayColourVolume(colourVolume.value(), updateMetadata);
-
-          if (auto lightLevel = CHevcSei::ExtractContentLightLevel(messages, clearBuf)) 
-            ApplyContentLightLevel(lightLevel.value(), updateMetadata);
-
-          if (updateMetadata) UpdateHdrStaticMetadata();
-        }
-
-        BitstreamAllocAndCopy(&m_convertBuffer, &offset, buf, size, nal_type);
+        default:
+          BitstreamAllocAndCopy(&m_convertBuffer, &offset, buf, size, nal_type);
+          break;        
       }
-      else
-      {
-        buf_eos = buf;
-        size_eos = size;
-      }
-      CLog::Log(LOGDEBUG, LOGVIDEO, "CBitstreamConverter::Convert: BL nal_type: {}, size: {}",
-        nal_type, size);
+      
+      CLog::Log(LOGDEBUG, LOGVIDEO, "CBitstreamConverter::Convert: DT-DL BL nal_type: [{}], size: [{}]", nal_type, size);
 
       buf += size;
     }
@@ -857,26 +850,32 @@ bool CBitstreamConverter::Convert(uint8_t *pData_bl, int iSize_bl, uint8_t *pDat
     while (end - buf > 4)
     {
       uint32_t size;
-      uint8_t  nal_type;
+      uint8_t nal_type;
       size = std::min<uint32_t>(BS_RB32(buf), end - buf - 4);
       buf += 4;
       nal_type = (buf[0] >> 1) & 0x3f;
 
-      if (nal_type == HEVC_NAL_UNSPEC62)
-      {
-        ProcessDoViRpuWrap(buf, size, &m_convertBuffer, offset, pts);
+      switch (nal_type) {
+  
+        case HEVC_NAL_UNSPEC62: // DoVi RPU
+          if (!m_removeDovi && !convert_hdr10plus_meta)
+            ProcessDoViRpuWrap(buf, size, &m_convertBuffer, offset, pts);
+          break;
+
+        default: // Package other data into HEVC_NAL_UNSPEC63 DoVi EL
+          if (!m_removeDovi && !convert_hdr10plus_meta && (m_convert_dovi == DOVIMode::MODE_NONE))
+            BitstreamAllocAndCopy(&m_convertBuffer, &offset, buf, size, HEVC_NAL_UNSPEC63);
+          break;
       }
-      else
-      {
-        if (m_convert_dovi == DOVIMode::MODE_NONE)
-          BitstreamAllocAndCopy(&m_convertBuffer, &offset, buf, size, HEVC_NAL_UNSPEC63);
-      }
-      if (m_convert_dovi == DOVIMode::MODE_NONE || nal_type == HEVC_NAL_UNSPEC62)
-        CLog::Log(LOGDEBUG, LOGVIDEO, "CBitstreamConverter::Convert: EL nal_type: {}, size: {}",
-          nal_type, size);
+
+      CLog::Log(LOGDEBUG, LOGVIDEO, "CBitstreamConverter::Convert: DT-DL EL nal_type: [{}], size: [{}]", nal_type, size);
 
       buf += size;
     }
+
+    // If converting hdr10plus - add the DoVi RPU as the last NALU in the access unit.
+    if (convert_hdr10plus_meta)
+      AddDoViRpuNaluWrap(hdr10plus_meta, &m_convertBuffer, offset, pts);
 
     // append end of sequence if exist
     if (buf_eos)
@@ -1198,11 +1197,20 @@ void CBitstreamConverter::UpdateHdrStaticMetadata() {
   hdrStaticMetadataInfo.has_mdcv_metadata = m_hdrStaticMetadataInfo.has_mdcv_metadata;
   hdrStaticMetadataInfo.max_lum = m_hdrStaticMetadataInfo.max_lum;
   hdrStaticMetadataInfo.min_lum = m_hdrStaticMetadataInfo.min_lum;
+  hdrStaticMetadataInfo.colour_primaries = m_hdrStaticMetadataInfo.colour_primaries;
+
   hdrStaticMetadataInfo.has_cll_metadata = m_hdrStaticMetadataInfo.has_cll_metadata;
   hdrStaticMetadataInfo.max_cll = m_hdrStaticMetadataInfo.max_cll;
   hdrStaticMetadataInfo.max_fall = m_hdrStaticMetadataInfo.max_fall;
 
   m_processInfo.SetVideoHDRStaticMetadataInfo(hdrStaticMetadataInfo);
+}
+
+void CBitstreamConverter::AddDoViRpuNaluWrap(const Hdr10PlusMetadata& meta, uint8_t **poutbuf, uint32_t& poutbuf_size, double pts) {
+  
+  int int_poutbuf_size = poutbuf_size;
+  AddDoViRpuNalu(meta, poutbuf, &int_poutbuf_size, pts);
+  poutbuf_size = static_cast<uint32_t>(int_poutbuf_size);
 }
 
 void CBitstreamConverter::AddDoViRpuNalu(const Hdr10PlusMetadata& meta, uint8_t **poutbuf, int *poutbuf_size, double pts) {
@@ -1233,6 +1241,13 @@ void CBitstreamConverter::AddDoViRpuNalu(const Hdr10PlusMetadata& meta, uint8_t 
     BitstreamAllocAndCopy(poutbuf, poutbuf_size, NULL, 0, nalu.data(), nalu.size(), HEVC_NAL_UNSPEC62);
     nalu.clear();
   }
+}
+
+void CBitstreamConverter::ProcessSeiPrefixWrap(uint8_t *buf, int32_t nal_size, uint8_t **poutbuf, uint32_t& poutbuf_size, Hdr10PlusMetadata& meta, bool& convert_hdr10plus_meta) {
+  
+  int int_poutbuf_size = poutbuf_size;
+  ProcessSeiPrefix(buf, nal_size, poutbuf, &int_poutbuf_size, meta, convert_hdr10plus_meta);
+  poutbuf_size = static_cast<uint32_t>(int_poutbuf_size);
 }
 
 void CBitstreamConverter::ProcessSeiPrefix(uint8_t *buf, int32_t nal_size, uint8_t **poutbuf, int *poutbuf_size, Hdr10PlusMetadata& meta, bool& convert_hdr10plus_meta) {
@@ -1439,9 +1454,8 @@ bool CBitstreamConverter::BitstreamConvert(uint8_t* pData, int iSize, uint8_t **
   } while (cumul_size < buf_size);
 
   // If converting hdr10plus - add the DoVi RPU as the last NALU in the access unit.
-  if (convert_hdr10plus_meta) {
+  if (convert_hdr10plus_meta)
     AddDoViRpuNalu(hdr10plus_meta, poutbuf, poutbuf_size, pts);
-  }
 
   m_first_frame = false;
 
