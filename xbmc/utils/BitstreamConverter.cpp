@@ -837,6 +837,9 @@ bool CBitstreamConverter::Convert(uint8_t *pData_bl, int iSize_bl, uint8_t *pDat
           break;        
       }
       
+      // Make sure bl_present_flag is set.
+      m_hints.dovi.bl_present_flag = true;
+
       CLog::Log(LOGDEBUG, LOGVIDEO, "CBitstreamConverter::Convert: DT-DL BL nal_type: [{}], size: [{}]", nal_type, size);
 
       buf += size;
@@ -867,6 +870,9 @@ bool CBitstreamConverter::Convert(uint8_t *pData_bl, int iSize_bl, uint8_t *pDat
             BitstreamAllocAndCopy(&m_convertBuffer, &offset, buf, size, HEVC_NAL_UNSPEC63);
           break;
       }
+
+      // Make sure el_present_flag is set.
+      m_hints.dovi.el_present_flag = true;
 
       CLog::Log(LOGDEBUG, LOGVIDEO, "CBitstreamConverter::Convert: DT-DL EL nal_type: [{}], size: [{}]", nal_type, size);
 
