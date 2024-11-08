@@ -561,11 +561,20 @@ bool CPlayerGUIInfo::GetLabel(std::string& value, const CFileItem *item, int con
     case PLAYER_PROCESS_VIDEO_HDR_TYPE:
       value = HdrTypeToString(CServiceBroker::GetDataCacheCore().GetVideoHdrType());
       return true;
+    case PLAYER_PROCESS_VIDEO_HDR_TYPE_RAW:
+      value = std::to_string(static_cast<int>(CServiceBroker::GetDataCacheCore().GetVideoHdrType()));
+      return true;
     case PLAYER_PROCESS_VIDEO_SOURCE_HDR_TYPE:
       value = HdrTypeToString(CServiceBroker::GetDataCacheCore().GetVideoSourceHdrType());
       return true;
+    case PLAYER_PROCESS_VIDEO_SOURCE_HDR_TYPE_RAW:
+      value = std::to_string(static_cast<int>(CServiceBroker::GetDataCacheCore().GetVideoSourceHdrType()));
+      return true;
     case PLAYER_PROCESS_VIDEO_SOURCE_ADDITIONAL_HDR_TYPE:
       value = HdrTypeToString(CServiceBroker::GetDataCacheCore().GetVideoSourceAdditionalHdrType());
+      return true;
+    case PLAYER_PROCESS_VIDEO_SOURCE_ADDITIONAL_HDR_TYPE_RAW:
+      value = std::to_string(static_cast<int>(CServiceBroker::GetDataCacheCore().GetVideoSourceAdditionalHdrType()));
       return true;
     case PLAYER_PROCESS_VIDEO_WIDTH_RAW:
       value = std::to_string(CServiceBroker::GetDataCacheCore().GetVideoWidth());
@@ -574,7 +583,7 @@ bool CPlayerGUIInfo::GetLabel(std::string& value, const CFileItem *item, int con
       value = std::to_string(CServiceBroker::GetDataCacheCore().GetVideoHeight());
       return true;
     case PLAYER_PROCESS_VIDEO_COLOR_SPACE:
-      value = av_color_space_name(CServiceBroker::GetDataCacheCore().GetVideoColorSpace());;
+      value = av_color_space_name(CServiceBroker::GetDataCacheCore().GetVideoColorSpace());
       return true;
     case PLAYER_PROCESS_VIDEO_COLOR_RANGE:
       value = av_color_range_name(CServiceBroker::GetDataCacheCore().GetVideoColorRange());
