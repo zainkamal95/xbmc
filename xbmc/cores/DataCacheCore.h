@@ -32,6 +32,9 @@ public:
   void SignalAudioInfoChange();
   void SignalSubtitleInfoChange();
 
+  void SetAVChange(bool value);
+  bool GetAVChange();
+
   // player video info
   void SetVideoPts(double pts);
   double GetVideoPts();
@@ -255,6 +258,7 @@ public:
   int64_t GetMaxTime();
 
 protected:
+  std::atomic_bool m_AVChange = false;
   std::atomic_bool m_hasAVInfoChanges = false;
 
   CCriticalSection m_videoPlayerSection;
