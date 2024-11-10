@@ -434,7 +434,8 @@ bool hasAtmos(const uint8_t* buffer, unsigned int size) {
 
 bool CAEStreamParser::TrySyncAC3(uint8_t* data,
                                  unsigned int size,
-                                 bool resyncing)
+                                 bool resyncing,
+                                 bool wantEAC3dependent)
 {
 
   // https://www.etsi.org/deliver/etsi_ts/103400_103499/103420/01.02.01_60/ts_103420v010201p.pdf
@@ -468,6 +469,9 @@ bool CAEStreamParser::TrySyncAC3(uint8_t* data,
   if (bsid <= 10)
   {
     // Normal AC-3
+
+    if (wantEAC3dependent)
+      return false;
 
     uint8_t fscod = data[4] >> 6;
     uint8_t frmsizecod = data[4] & 0x3F;
@@ -510,6 +514,12 @@ bool CAEStreamParser::TrySyncAC3(uint8_t* data,
       return true;
     }
     m_info.m_ac3FrameSize = fsizeMain;
+    if (TrySyncAC3(data + fsizeMain, size - fsizeMain, resyncing, true))
+    {
+      // concatenate the main and dependent frames
+      m_fsize += fsizeMain;
+      return true;
+    }
     
     unsigned int crc_size;
     // if we have enough data, validate the entire packet, else try to validate crc2 (5/8 of the packet)
@@ -536,11 +546,13 @@ bool CAEStreamParser::TrySyncAC3(uint8_t* data,
   }
   else
   {
-
+    // Enhanced AC-3
     uint8_t strmtyp = data[2] >> 6;
+    if (strmtyp == 3)
+      return false;
 
-    // Enhanced AC-3 - Sync on indepedent frame only.
-    if (strmtyp != 0) return false;
+    if (strmtyp != 1 && wantEAC3dependent)
+      return false;
 
     unsigned int framesize = (((data[2] & 0x7) << 8) | data[3]) + 1;
 
@@ -567,17 +579,29 @@ bool CAEStreamParser::TrySyncAC3(uint8_t* data,
     m_fsize = framesize << 1; // Convert Frame size to bytes (<<1 is multiply by 2)
     m_info.m_repeat = MAX_EAC3_BLOCKS / blocks;
 
-    unsigned int fsizeMain = m_fsize;
-    unsigned int reqBytes = fsizeMain + 8;
-
-    if (size < reqBytes)
+    // EAC3 can have a dependent stream too
+    if (!wantEAC3dependent)
     {
-      CLog::Log(LOGINFO, "CAEStreamParser::TrySyncAC3 - E-AC3 Not enough data for frame");
-      // not enough data to check for E-AC3 frame, request more
-      m_needBytes = reqBytes;
-      m_fsize = 0;
-      // no need to resync => return true
-      return true;
+      unsigned int fsizeMain = m_fsize;
+      unsigned int reqBytes = fsizeMain + 8;
+
+      if (size < reqBytes)
+      {
+        CLog::Log(LOGINFO, "CAEStreamParser::TrySyncAC3 - E-AC3 Not enough data for frame");
+        // not enough data to check for E-AC3 frame, request more
+        m_needBytes = reqBytes;
+        m_fsize = 0;
+        // no need to resync => return true
+        return true;
+      }
+
+      m_info.m_ac3FrameSize = fsizeMain;
+      if (TrySyncAC3(data + fsizeMain, size - fsizeMain, resyncing, true))
+      {
+        // concatenate the main and dependent frames
+        m_fsize += fsizeMain;
+        return true;
+      }
     }
 
     // Check for Atmos
@@ -613,7 +637,7 @@ unsigned int CAEStreamParser::SyncAC3(uint8_t* data, unsigned int size)
   for (; size - skip > 7; ++skip, ++data)
   {
     bool resyncing = (skip != 0);
-    if (TrySyncAC3(data, size - skip, resyncing))
+    if (TrySyncAC3(data, size - skip, resyncing, false))
       return skip;
   }
 
