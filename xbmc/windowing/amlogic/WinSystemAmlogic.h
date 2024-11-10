@@ -15,6 +15,7 @@
 #include "threads/SystemClock.h"
 #include "system_egl.h"
 #include <EGL/fbdev_window.h>
+#include "DolbyVisionAML.h"
 
 class IDispResource;
 
@@ -55,4 +56,7 @@ protected:
   std::unique_ptr<CLibInputHandler> m_libinput;
   CHDRCapabilities m_hdr_caps;
   bool m_force_mode_switch;
+
+private:
+  std::unique_ptr<CDolbyVisionAML> m_dolbyVisionAML;
 };
