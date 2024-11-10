@@ -83,6 +83,16 @@ void CDataCacheCore::SignalSubtitleInfoChange()
   m_hasAVInfoChanges = true;
 }
 
+void CDataCacheCore::SetAVChange(bool value)
+{
+  m_AVChange = value;
+}
+
+bool CDataCacheCore::GetAVChange()
+{
+  return m_AVChange;
+}
+
 void CDataCacheCore::SetVideoPts(double pts)
 {
   std::unique_lock<CCriticalSection> lock(m_videoPlayerSection);

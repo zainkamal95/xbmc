@@ -575,6 +575,19 @@ int CSelectionStreams::CountType(StreamType type) const
 // main class
 //------------------------------------------------------------------------------
 
+void CVideoPlayer::SetAVChange(std::string from)
+{
+  CLog::Log(LOGINFO, "VideoPlayer::SetAVChange true [{}]", from);
+  CServiceBroker::GetDataCacheCore().SetAVChange(true);
+
+  // Schedule set to false in 5 sec - adjust further in skin annimation for actual display time on screen.
+  CServiceBroker::GetJobManager()->Submit([this, from]() {
+      usleep(1000 * 5000);
+      CServiceBroker::GetDataCacheCore().SetAVChange(false);
+      CLog::Log(LOGINFO, "VideoPlayer::SetAVChange false [{}]", from);
+  });
+}
+
 void CVideoPlayer::CreatePlayers()
 {
   if (m_players_created)
@@ -3728,6 +3741,8 @@ bool CVideoPlayer::OpenAudioStream(CDVDStreamInfo& hint, bool reset)
   static_cast<IDVDStreamPlayerAudio*>(player)->SendMessage(
       std::make_shared<CDVDMsg>(CDVDMsg::PLAYER_REQUEST_STATE), 1);
 
+  SetAVChange("OpenAudioStream");
+
   return true;
 }
 
@@ -3854,6 +3869,8 @@ bool CVideoPlayer::OpenVideoStream(CDVDStreamInfo& hint, bool reset)
     m_pCCDemuxer = std::make_unique<CDVDDemuxCC>(hint.codec);
     m_SelectionStreams.Clear(STREAM_NONE, STREAM_SOURCE_VIDEOMUX);
   }
+
+  SetAVChange("OpenVideoStream");
 
   return true;
 }
