@@ -66,9 +66,9 @@ CWinSystemAmlogic::CWinSystemAmlogic()
 
 bool CWinSystemAmlogic::InitWindowSystem()
 {
-  // Setup DV UI Elements etc. TODO: Better way than have on heap to retain?
-  CDolbyVisionAML* dolbyVisionAML = new CDolbyVisionAML(); 
-  if (!dolbyVisionAML->Setup()) delete dolbyVisionAML;
+  // Setup DV UI Elements etc.
+  m_dolbyVisionAML = std::make_unique<CDolbyVisionAML>();
+  if (!m_dolbyVisionAML->Setup()) m_dolbyVisionAML.reset();
 
   const std::shared_ptr<CSettings> settings = CServiceBroker::GetSettingsComponent()->GetSettings();
 
