@@ -752,6 +752,10 @@ bool CPlayerGUIInfo::GetLabel(std::string& value, const CFileItem *item, int con
       value = aml_video_fps_drop();
       return true;
 
+    case PLAYER_PROCESS_AV_CHANGE:
+      value = std::to_string(CServiceBroker::GetDataCacheCore().GetAVChange());
+      return true;
+
     ///////////////////////////////////////////////////////////////////////////////////////////////
     // PLAYLIST_*
     ///////////////////////////////////////////////////////////////////////////////////////////////

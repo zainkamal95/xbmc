@@ -1300,7 +1300,9 @@ const infomap player_process[] = {{"videodecoder", PLAYER_PROCESS_VIDEODECODER},
                                   {"amlogic.vs10.mode", PLAYER_PROCESS_AML_VS10_MODE },
                                   {"amlogic.vs10.mode.raw", PLAYER_PROCESS_AML_VS10_MODE_RAW },
                                   {"amlogic.video.fps.info", PLAYER_PROCESS_AML_VIDEO_FPS_INFO },
-                                  {"amlogic.video.fps.drop", PLAYER_PROCESS_AML_VIDEO_FPS_DROP },};
+                                  {"amlogic.video.fps.drop", PLAYER_PROCESS_AML_VIDEO_FPS_DROP },
+                                  
+                                  {"av.change", PLAYER_PROCESS_AV_CHANGE }};
 
 /// \page modules__infolabels_boolean_conditions
 /// \subsection modules__infolabels_boolean_conditions_Weather Weather
