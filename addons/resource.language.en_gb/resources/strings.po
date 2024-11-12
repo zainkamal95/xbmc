@@ -24968,3 +24968,27 @@ msgstr ""
 msgctxt "#50122"
 msgid "When Dolby Vision and HDR10+ are both present, prefer conversion from HDR10+ over using the original Dolby Vision, note any FEL will be discarded in this case."
 msgstr ""
+
+#. "Dolby Vision HDR10+"
+#: system/settings/settings.xml
+msgctxt "#50131"
+msgid "Prefered HDR for dual Dolby Vision and HDR10+ content"
+msgstr ""
+
+#. "Dolby Vision HDR10+"
+#: system/settings/settings.xml
+msgctxt "#50132"
+msgid "When Dolby Vision and HDR10+ are both present, which HDR to prefer."
+msgstr ""
+
+#. "Dolby Vision HDR10+"
+#: system/settings/settings.xml
+msgctxt "#50133"
+msgid "Dolby Vision"
+msgstr ""
+
+#. "Dolby Vision HDR10+"
+#: system/settings/settings.xml
+msgctxt "#50134"
+msgid "HDR10+"
+msgstr ""

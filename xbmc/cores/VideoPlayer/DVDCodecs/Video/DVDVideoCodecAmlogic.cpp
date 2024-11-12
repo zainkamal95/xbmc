@@ -311,9 +311,18 @@ bool CDVDVideoCodecAmlogic::Open(CDVDStreamInfo &hints, CDVDCodecOptions &option
       if (m_hints.extradata && !m_hints.cryptoSession && m_bitstream && (aml_dv_mode() != DV_MODE_OFF))
       {
         auto settings = CServiceBroker::GetSettingsComponent()->GetSettings();
+        
+        bool dualPriorityHdr10Plus = (settings->GetInt(CSettings::SETTING_COREELEC_AMLOGIC_DV_DUAL_PRIORITY) == 1);
+        
         if (m_hints.hdrType == StreamHdrType::HDR_TYPE_DOLBYVISION) 
         {
-          if (settings->GetBool(CSettings::SETTING_COREELEC_AMLOGIC_DV_HDR10PLUS_CONVERT)) 
+          if (dualPriorityHdr10Plus)
+          {
+            CLog::Log(LOGINFO, "{}::{} - DV HEVC bitstream - if stream also contains HDR10+, native HDR10+ has priority.",
+                      __MODULE_NAME__, __FUNCTION__);
+            m_bitstream->SetDualPriorityHdr10Plus(true);
+          } 
+          else if (settings->GetBool(CSettings::SETTING_COREELEC_AMLOGIC_DV_HDR10PLUS_CONVERT)) 
           {
             bool preferConvertHdr10Plus = settings->GetBool(CSettings::SETTING_COREELEC_AMLOGIC_DV_HDR10PLUS_PREFER_CONVERT);
             m_bitstream->SetPreferCovertHdr10Plus(preferConvertHdr10Plus);
@@ -325,24 +334,13 @@ bool CDVDVideoCodecAmlogic::Open(CDVDStreamInfo &hints, CDVDCodecOptions &option
 
           if (m_hints.dovi.dv_profile == 7) 
           {
-            //if (m_hints.dovi.bl_present_flag == 0)  // If missing the bl present flag then need to convert - logic form CE Team presumably for Dual Layer - odd sounding senario.
-            //{
-            //  CLog::Log(LOGINFO, "{}::{} - DV HEVC bitstream - will be converted to minimum enhancement layer because no BL flag is present",
-            //            __MODULE_NAME__, __FUNCTION__);
-            //  m_hints.dovi.el_present_flag = 0;
-            //  m_hints.dovi.bl_present_flag = 1;
-            //  m_bitstream->SetConvertDovi(DOVIMode::MODE_TOMEL);
-            //} 
-            //else // If not required to convert - check if user wants to convert.
-            //{
-              DOVIMode convertDovi = static_cast<DOVIMode>(settings->GetInt(CSettings::SETTING_VIDEOPLAYER_CONVERTDOVI));
-              if (convertDovi)
-              {
-                CLog::Log(LOGINFO, "{}::{} - DV HEVC bitstream - user chooses to convert to mode [{:d}]",
-                          __MODULE_NAME__, __FUNCTION__, convertDovi);
-                m_bitstream->SetConvertDovi(convertDovi);
-              }
-            //}
+            DOVIMode convertDovi = static_cast<DOVIMode>(settings->GetInt(CSettings::SETTING_VIDEOPLAYER_CONVERTDOVI));
+            if (convertDovi)
+            {
+              CLog::Log(LOGINFO, "{}::{} - DV HEVC bitstream - user chooses to convert to mode [{:d}]",
+                        __MODULE_NAME__, __FUNCTION__, convertDovi);
+              m_bitstream->SetConvertDovi(convertDovi);
+            }
           }
         }
 
@@ -356,16 +354,17 @@ bool CDVDVideoCodecAmlogic::Open(CDVDStreamInfo &hints, CDVDCodecOptions &option
           m_bitstream->SetConvertHdr10PlusPeakBrightnessSource(peakBrightnessSource);
         }
 
-        // If HDR10 and doing VS10 - remove the HDR10+ if present.
-        if (m_hints.hdrType == StreamHdrType::HDR_TYPE_HDR10) 
+        // If HDR10 or Dual Priority HDR10+ and doing VS10 - remove the HDR10+ and DV if present to avoid conflict with VS10.
+        if ((m_hints.hdrType == StreamHdrType::HDR_TYPE_HDR10) || dualPriorityHdr10Plus)
         {
           unsigned int mode(aml_vs10_by_setting(CSettings::SETTING_COREELEC_AMLOGIC_DV_VS10_HDR10PLUS));
           if (mode < DOLBY_VISION_OUTPUT_MODE_BYPASS)
           {
             // for VS10 conversion need to remove the HDR10plus metadata.
-            CLog::Log(LOGDEBUG, "{}::{} - HDR10 HEVC bitstream - if HDR10+ then metadata will be removed to allow correct VS10 processing",
+            CLog::Log(LOGINFO, "{}::{} - HDR10 HEVC bitstream - if HDR10+ then metadata will be removed to allow correct VS10 processing",
               __MODULE_NAME__, __FUNCTION__);
             m_bitstream->SetRemoveHdr10Plus(true);
+            m_bitstream->SetRemoveDovi(true);
           }
         }
       }
