@@ -481,6 +481,7 @@ CBitstreamConverter::CBitstreamConverter(CDVDStreamInfo& hints, CProcessInfo &pr
   m_convert_dovi = DOVIMode::MODE_NONE;
   m_convert_Hdr10Plus = false;
   m_prefer_Hdr10Plus_conversion = false;
+  m_dual_priority_Hdr10Plus = false;
   m_removeDovi = false;
   m_removeHdr10Plus = false;
   m_combine = false;
@@ -1275,19 +1276,20 @@ void CBitstreamConverter::ProcessSeiPrefix(uint8_t *buf, int32_t nal_size, uint8
 
   if (auto res = CHevcSei::ExtractHdr10Plus(messages, clearBuf)) {
 
-    bool considerAsHdr10Plus = ((m_intial_hdrType == StreamHdrType::HDR_TYPE_HDR10) || m_prefer_Hdr10Plus_conversion);
+    bool isDual = (m_intial_hdrType == StreamHdrType::HDR_TYPE_DOLBYVISION); // Original is DV and now also found HDR10+ so is dual.
+    bool considerAsHdr10Plus = (!isDual || m_dual_priority_Hdr10Plus || m_prefer_Hdr10Plus_conversion);
 
     if (m_first_frame) {
       if (considerAsHdr10Plus) {
         m_hints.hdrType = StreamHdrType::HDR_TYPE_HDR10PLUS;
         m_processInfo.SetVideoSourceHdrType(StreamHdrType::HDR_TYPE_HDR10PLUS);      
-        if (m_intial_hdrType == StreamHdrType::HDR_TYPE_DOLBYVISION) m_processInfo.SetVideoSourceAdditionalHdrType(StreamHdrType::HDR_TYPE_DOLBYVISION);
+        if (isDual) m_processInfo.SetVideoSourceAdditionalHdrType(StreamHdrType::HDR_TYPE_DOLBYVISION);
       } else {        
-        if (m_intial_hdrType == StreamHdrType::HDR_TYPE_DOLBYVISION) m_processInfo.SetVideoSourceAdditionalHdrType(StreamHdrType::HDR_TYPE_HDR10PLUS);
+        if (isDual) m_processInfo.SetVideoSourceAdditionalHdrType(StreamHdrType::HDR_TYPE_HDR10PLUS);
       }
     }
 
-    bool convert = (considerAsHdr10Plus && m_convert_Hdr10Plus);
+    bool convert = (considerAsHdr10Plus && m_convert_Hdr10Plus && !m_dual_priority_Hdr10Plus);
 
     if (convert) {      
       meta = res.value();

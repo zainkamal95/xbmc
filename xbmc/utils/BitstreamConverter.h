@@ -127,6 +127,7 @@ public:
   void              SetConvertHdr10Plus(bool value) { m_convert_Hdr10Plus = value; }
   void              SetPreferCovertHdr10Plus(bool value) { m_prefer_Hdr10Plus_conversion = value; }
   void              SetConvertHdr10PlusPeakBrightnessSource(enum PeakBrightnessSource value) { m_convert_Hdr10Plus_peak_brightness_source = value; };
+  void              SetDualPriorityHdr10Plus(bool value) { m_dual_priority_Hdr10Plus = value; }
   void              SetRemoveDovi(bool value) { m_removeDovi = value; }
   void              SetRemoveHdr10Plus(bool value) { m_removeHdr10Plus = value; }
 
@@ -201,6 +202,7 @@ protected:
   bool              m_removeHdr10Plus;
   bool              m_convert_Hdr10Plus;
   bool              m_prefer_Hdr10Plus_conversion;
+  bool              m_dual_priority_Hdr10Plus;
   enum PeakBrightnessSource m_convert_Hdr10Plus_peak_brightness_source;
   bool              m_first_frame;
   HDRStaticMetadataInfo m_hdrStaticMetadataInfo;
