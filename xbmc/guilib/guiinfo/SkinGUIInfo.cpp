@@ -10,6 +10,7 @@
 
 #include "ServiceBroker.h"
 #include "addons/Skin.h"
+#include "filesystem/File.h"
 #include "guilib/LocalizeStrings.h"
 #include "guilib/guiinfo/GUIInfo.h"
 #include "guilib/guiinfo/GUIInfoLabels.h"
@@ -100,6 +101,12 @@ bool CSkinGUIInfo::GetInt(int& value, const CGUIListItem *gitem, int contextWind
   return false;
 }
 
+bool SkinHasFile(std::string filePath)
+{
+  std::string fullPath = URIUtils::AddFileToFolder(g_SkinInfo->Path(), filePath);
+  return XFILE::CFile::Exists(fullPath);
+}
+
 bool CSkinGUIInfo::GetBool(bool& value, const CGUIListItem *gitem, int contextWindow, const CGUIInfo &info) const
 {
   switch (info.m_info)
@@ -132,6 +139,11 @@ bool CSkinGUIInfo::GetBool(bool& value, const CGUIListItem *gitem, int contextWi
     case SKIN_TIMER_IS_RUNNING:
     {
       value = g_SkinInfo->TimerIsRunning(info.GetData3());
+      return true;
+    }
+    case SKIN_HAS_FILE:
+    {
+      value = SkinHasFile(info.GetData3());
       return true;
     }
   }

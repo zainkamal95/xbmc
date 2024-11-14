@@ -10612,6 +10612,8 @@ int CGUIInfoManager::TranslateSingleString(const std::string &strCondition, bool
           return AddMultiInfo(CGUIInfo(SKIN_TIMER_IS_RUNNING, prop.param(0)));
         else if (prop.name == "timerelapsedsecs")
           return AddMultiInfo(CGUIInfo(SKIN_TIMER_ELAPSEDSECS, prop.param(0)));
+        else if (prop.name == "hasfile")
+          return AddMultiInfo(CGUIInfo(SKIN_HAS_FILE, prop.param(0)));
       }
     }
     else if (cat.name == "window")
