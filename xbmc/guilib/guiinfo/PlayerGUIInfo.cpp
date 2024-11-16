@@ -816,6 +816,9 @@ bool CPlayerGUIInfo::GetInt(int& value, const CGUIListItem *gitem, int contextWi
     case PLAYER_PROCESS_VIDEO_QUEUE_DATA_LEVEL:
       value = CServiceBroker::GetDataCacheCore().GetVideoQueueDataLevel();
       return true;
+    case PLAYER_PROCESS_VIDEO_SOURCE_HDR_TYPE_RAW:
+      value = static_cast<int>(CServiceBroker::GetDataCacheCore().GetVideoSourceHdrType());
+      return true;
   }
 
   return false;
