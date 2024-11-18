@@ -24972,7 +24972,7 @@ msgstr ""
 #. "Dolby Vision HDR10+"
 #: system/settings/settings.xml
 msgctxt "#50131"
-msgid "Prefered HDR for dual Dolby Vision and HDR10+ content"
+msgid "Preferred HDR for dual Dolby Vision and HDR10+ content"
 msgstr ""
 
 #. "Dolby Vision HDR10+"
