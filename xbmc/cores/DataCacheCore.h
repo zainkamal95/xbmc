@@ -297,11 +297,11 @@ protected:
     std::string channels;
     int sampleRate;
     int bitsPerSample;
-    bool isDolbyAtmos;
-    DtsXType dtsXType;
-    double liveBitRate;
-    int queueLevel;
-    int queueDataLevel;
+    bool isDolbyAtmos = false;
+    DtsXType dtsXType = DtsXType::DTS_X_NONE;
+    double liveBitRate = 0;
+    int queueLevel = 0;
+    int queueDataLevel = 0;
   } m_playerAudioInfo;
 
   mutable CCriticalSection m_contentSection;
