@@ -180,7 +180,7 @@ bool CDVDVideoCodecAmlogic::Open(CDVDStreamInfo &hints, CDVDCodecOptions &option
       // under streamers can have issues when seeking.
       if (m_hints.extradata && m_hints.extradata.GetData()[0] == 1)
       {
-        m_bitstream = std::make_unique<CBitstreamConverter>(m_hints, m_processInfo);
+        m_bitstream = std::make_unique<CBitstreamConverter>(m_hints);
         m_bitstream->Open(true);
         m_bitstream->ResetStartDecode();
         // make sure we do not leak the existing m_hints.extradata
@@ -304,7 +304,7 @@ bool CDVDVideoCodecAmlogic::Open(CDVDStreamInfo &hints, CDVDCodecOptions &option
         goto FAIL;
       }
       m_pFormatName = "am-h265";
-      m_bitstream = std::make_unique<CBitstreamConverter>(m_hints, m_processInfo);
+      m_bitstream = std::make_unique<CBitstreamConverter>(m_hints);
       m_bitstream->Open(true);
 
       // check for hevc-hvcC and convert to h265-annex-b - and DV is on.
@@ -601,7 +601,7 @@ CDVDVideoCodec::VCReturn CDVDVideoCodecAmlogic::GetPicture(VideoPicture* pVideoP
     static_cast<CAMLVideoBuffer*>(pVideoPicture->videoBuffer)->Set(this, m_Codec,
      m_Codec->GetOMXPts(), m_Codec->GetAmlDuration(), m_Codec->GetBufferIndex());;
 
-    m_processInfo.SetVideoPts(m_Codec->GetPts());
+    m_dataCacheCore.SetVideoPts(m_Codec->GetPts());
   }
 
   // check for mpeg2 aspect ratio changes

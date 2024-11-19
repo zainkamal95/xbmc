@@ -9,6 +9,8 @@
 #pragma once
 
 #include "DVDClock.h"
+#include "ServiceBroker.h"
+#include "cores/DataCacheCore.h"
 
 #include <string>
 #include <utility>
@@ -36,7 +38,8 @@ public:
 class IDVDStreamPlayer
 {
 public:
-  explicit IDVDStreamPlayer(CProcessInfo& processInfo) : m_processInfo(processInfo) {}
+  explicit IDVDStreamPlayer(CProcessInfo& processInfo) : m_processInfo(processInfo)
+                                                       , m_dataCacheCore(CServiceBroker::GetDataCacheCore()) {}
   virtual ~IDVDStreamPlayer() = default;
   virtual bool OpenStream(CDVDStreamInfo hint) = 0;
   virtual void CloseStream(bool bWaitForBuffers) = 0;
@@ -54,6 +57,7 @@ public:
   };
 protected:
   CProcessInfo &m_processInfo;
+  CDataCacheCore &m_dataCacheCore;
 };
 
 struct SStartMsg

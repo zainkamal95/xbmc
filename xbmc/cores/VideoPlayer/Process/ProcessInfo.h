@@ -50,47 +50,6 @@ public:
   float GetVideoFps();
   void SetVideoDAR(float dar);
   float GetVideoDAR();
-  void SetVideoBitDepth(int bitDepth);
-  int GetVideoBitDepth();
-  void SetVideoHdrType(StreamHdrType hdrType);
-  StreamHdrType GetVideoHdrType();
-  void SetVideoSourceHdrType(StreamHdrType hdrType);
-  StreamHdrType GetVideoSourceHdrType();
-  void SetVideoSourceAdditionalHdrType(StreamHdrType hdrType);
-  StreamHdrType GetVideoSourceAdditionalHdrType();
-  void SetVideoColorSpace(AVColorSpace colorSpace);
-  AVColorSpace GetVideoColorSpace();
-  void SetVideoColorRange(AVColorRange colorRange);
-  AVColorRange GetVideoColorRange();
-  void SetVideoColorPrimaries(AVColorPrimaries colorPrimaries);
-  AVColorPrimaries GetVideoColorPrimaries();
-  void SetVideoColorTransferCharacteristic(AVColorTransferCharacteristic colorTransferCharacteristic);
-  AVColorTransferCharacteristic GetVideoColorTransferCharacteristic();
-    
-  void SetVideoDoViFrameMetadata(DOVIFrameMetadata value);
-  DOVIFrameMetadata GetVideoDoViFrameMetadata();
-
-  void SetVideoDoViStreamMetadata(DOVIStreamMetadata value);
-  DOVIStreamMetadata GetVideoDoViStreamMetadata();
-
-  void SetVideoDoViStreamInfo(DOVIStreamInfo value);
-  DOVIStreamInfo GetVideoDoViStreamInfo();
-
-  void SetVideoSourceDoViStreamInfo(DOVIStreamInfo value);
-  DOVIStreamInfo GetVideoSourceDoViStreamInfo();
-
-  void SetVideoDoViCodecFourCC(std::string codecFourCC);
-  std::string GetVideoDoViCodecFourCC();
-
-  void SetVideoHDRStaticMetadataInfo(HDRStaticMetadataInfo value);
-  HDRStaticMetadataInfo GetVideoHDRStaticMetadataInfo();
-
-  void SetVideoLiveBitRate(double bitRate);
-  double GetVideoLiveBitRate();
-  void SetVideoQueueLevel(int level);
-  int GetVideoQueueLevel();
-  void SetVideoQueueDataLevel(int level);
-  int GetVideoQueueDataLevel();
   void SetVideoInterlaced(bool interlaced);
   bool GetVideoInterlaced();
   virtual EINTERLACEMETHOD GetFallbackDeintMethod();
@@ -104,8 +63,6 @@ public:
   void SetPixFormats(std::vector<AVPixelFormat> &formats);
 
   // player audio info
-  void SetVideoPts(double pts);
-  double GetVideoPts();
   void ResetAudioCodecInfo();
   void SetAudioDecoderName(const std::string &name);
   std::string GetAudioDecoderName();
@@ -180,7 +137,6 @@ protected:
   CDataCacheCore *m_dataCache = nullptr;
 
   // player video info
-  double m_videoPts;
   bool m_videoIsHWDecoder;
   std::string m_videoDecoderName;
   std::string m_videoDeintMethod;
@@ -190,28 +146,6 @@ protected:
   int m_videoHeight;
   float m_videoFPS;
   float m_videoDAR;
-  int m_videoBitDepth;
-  StreamHdrType m_videoHdrType;
-  StreamHdrType m_videoSourceHdrType;
-  StreamHdrType m_videoSourceAdditionalHdrType;
-  AVColorSpace m_videoColorSpace;
-  AVColorRange m_videoColorRange;
-  AVColorPrimaries m_videoColorPrimaries;
-  AVColorTransferCharacteristic m_videoColorTransferCharacteristic;
-
-  DOVIFrameMetadata m_videoDoViFrameMetadata;
-  DOVIStreamMetadata m_videoDoViStreamMetadata;
-  DOVIStreamInfo m_videoDoViStreamInfo;
-  DOVIStreamInfo m_videoSourceDoViStreamInfo;
-
-  std::string m_videoDoViCodecFourCC;
-
-  HDRStaticMetadataInfo m_videoHDRStaticMetadataInfo;
-
-  unsigned int m_videoVS10Mode;
-  double m_videoLiveBitRate;
-  int m_videoQueueLevel;
-  int m_videoQueueDataLevel;
   bool m_videoIsInterlaced;
   std::list<EINTERLACEMETHOD> m_deintMethods;
   EINTERLACEMETHOD m_deintMethodDefault;

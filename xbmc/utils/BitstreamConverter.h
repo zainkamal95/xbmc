@@ -13,6 +13,8 @@
 #include <optional>
 #include <stdint.h>
 
+#include "ServiceBroker.h"
+#include "cores/DataCacheCore.h"
 #include "cores/VideoPlayer/DVDStreamInfo.h"
 #include "cores/VideoPlayer/Process/ProcessInfo.h"
 
@@ -108,7 +110,7 @@ public:
 class CBitstreamConverter
 {
 public:
-  CBitstreamConverter(CDVDStreamInfo& hints, CProcessInfo &processInfo);
+  CBitstreamConverter(CDVDStreamInfo& hints);
   ~CBitstreamConverter();
 
   bool              Open(bool to_annexb);
@@ -194,7 +196,7 @@ protected:
   bool              m_convert_bytestream;
   AVCodecID         m_codec;
   CDVDStreamInfo&   m_hints;
-  CProcessInfo&     m_processInfo;
+  CDataCacheCore&   m_dataCacheCore;
   StreamHdrType     m_intial_hdrType;
   bool              m_start_decode;
   enum DOVIMode     m_convert_dovi;

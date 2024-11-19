@@ -16,6 +16,7 @@
 #include "cores/VideoPlayer/Interface/TimingConstants.h"
 #include "cores/VideoPlayer/VideoRenderers/RenderManager.h"
 #include "cores/VideoSettings.h"
+#include "cores/DataCacheCore.h"
 #include "settings/AdvancedSettings.h"
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
@@ -319,14 +320,14 @@ CDVDVideoCodecFFmpeg::~CDVDVideoCodecFFmpeg()
   Dispose();
 }
 
-void SetProcessInfoVideoDetails(CProcessInfo &processInfo, CDVDStreamInfo &hints) 
+void CDVDVideoCodecFFmpeg::SetProcessInfoVideoDetails() 
 {
-  processInfo.SetVideoHdrType(hints.hdrType);
-  processInfo.SetVideoColorSpace(hints.colorSpace);
-  processInfo.SetVideoColorRange(hints.colorRange);
-  processInfo.SetVideoColorPrimaries(hints.colorPrimaries);
-  processInfo.SetVideoColorTransferCharacteristic(hints.colorTransferCharacteristic);
-  processInfo.SetVideoBitDepth(hints.bitdepth);
+  m_dataCacheCore.SetVideoHdrType(m_hints.hdrType);
+  m_dataCacheCore.SetVideoColorSpace(m_hints.colorSpace);
+  m_dataCacheCore.SetVideoColorRange(m_hints.colorRange);
+  m_dataCacheCore.SetVideoColorPrimaries(m_hints.colorPrimaries);
+  m_dataCacheCore.SetVideoColorTransferCharacteristic(m_hints.colorTransferCharacteristic);
+  m_dataCacheCore.SetVideoBitDepth(m_hints.bitdepth);
 }
 
 bool CDVDVideoCodecFFmpeg::Open(CDVDStreamInfo &hints, CDVDCodecOptions &options)
@@ -350,7 +351,7 @@ bool CDVDVideoCodecFFmpeg::Open(CDVDStreamInfo &hints, CDVDCodecOptions &options
   m_processInfo.SetSwDeinterlacingMethods();
   m_processInfo.SetVideoInterlaced(false);
 
-  SetProcessInfoVideoDetails(m_processInfo, hints);
+  SetProcessInfoVideoDetails();
 
   // libdav1d av1 sw decoding is implemented as a separate decoder
   // in ffmpeg which is always found first when calling `avcodec_find_decoder`.

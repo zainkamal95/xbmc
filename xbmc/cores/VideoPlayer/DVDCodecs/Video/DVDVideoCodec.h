@@ -9,9 +9,11 @@
 #pragma once
 
 #include "DVDResource.h"
+#include "ServiceBroker.h"
 #include "cores/VideoPlayer/Buffers/VideoBuffer.h"
 #include "cores/VideoPlayer/Interface/DemuxPacket.h"
 #include "cores/VideoPlayer/Process/ProcessInfo.h"
+#include "cores/DataCacheCore.h"
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -130,7 +132,9 @@ public:
     VC_EOF              //< EOF
   };
 
-  explicit CDVDVideoCodec(CProcessInfo &processInfo) : m_processInfo(processInfo) {}
+  explicit CDVDVideoCodec(CProcessInfo &processInfo) : m_processInfo(processInfo), 
+                                                       m_dataCacheCore(CServiceBroker::GetDataCacheCore()) {
+  }
   virtual ~CDVDVideoCodec() = default;
 
   /**
@@ -252,6 +256,7 @@ public:
   virtual bool SupportsExtention() { return false; }
 protected:
   CProcessInfo &m_processInfo;
+  CDataCacheCore &m_dataCacheCore;
 };
 
 // callback interface for ffmpeg hw accelerators

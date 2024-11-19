@@ -110,7 +110,7 @@ private:
   bool             m_opened;
   bool             m_drain = false;
   am_private_t    *am_private;
-  CDVDStreamInfo  &m_hints; // Reference as values can change.
+
   int              m_speed;
   uint64_t         m_cur_pts;
   uint64_t         m_last_pts;
@@ -139,7 +139,11 @@ private:
   static std::atomic_flag  m_pollSync;
   static int m_pollDevice;
   static double m_ttd;
-  CProcessInfo &m_processInfo;
+
+  CDVDStreamInfo  &m_hints;         // Reference as values can change.
+  CProcessInfo    &m_processInfo;
+  CDataCacheCore  &m_dataCacheCore;
+
   int m_decoder_timeout;
   std::chrono::time_point<std::chrono::system_clock> m_tp_last_frame;
 
