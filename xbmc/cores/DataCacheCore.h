@@ -36,8 +36,6 @@ public:
   bool GetAVChange();
 
   // player video info
-  void SetVideoPts(double pts);
-  double GetVideoPts();
   void SetVideoDecoderName(std::string name, bool isHw);
   std::string GetVideoDecoderName();
   bool IsVideoHwDecoder();
@@ -54,6 +52,10 @@ public:
   float GetVideoFps();
   void SetVideoDAR(float dar);
   float GetVideoDAR();
+
+  // Additional Player Process Info data (Only set in Data Core Cache)
+  void SetVideoPts(double pts);
+  double GetVideoPts();
   void SetVideoBitDepth(int bitDepth);
   int GetVideoBitDepth();
   void SetVideoHdrType(StreamHdrType hdrType);
@@ -70,22 +72,16 @@ public:
   AVColorPrimaries GetVideoColorPrimaries();
   void SetVideoColorTransferCharacteristic(AVColorTransferCharacteristic colorTransferCharacteristic);
   AVColorTransferCharacteristic GetVideoColorTransferCharacteristic();
-
   void SetVideoDoViFrameMetadata(DOVIFrameMetadata value);
   DOVIFrameMetadata GetVideoDoViFrameMetadata();
-
   void SetVideoDoViStreamMetadata(DOVIStreamMetadata value);
   DOVIStreamMetadata GetVideoDoViStreamMetadata();
-
   void SetVideoDoViStreamInfo(DOVIStreamInfo value);
   DOVIStreamInfo GetVideoDoViStreamInfo();
-
   void SetVideoSourceDoViStreamInfo(DOVIStreamInfo value);
   DOVIStreamInfo GetVideoSourceDoViStreamInfo();
-
   void SetVideoDoViCodecFourCC(std::string);
   std::string GetVideoDoViCodecFourCC();
-
   void SetVideoHDRStaticMetadataInfo(HDRStaticMetadataInfo value);
   HDRStaticMetadataInfo GetVideoHDRStaticMetadataInfo();
   void SetVideoLiveBitRate(double bitRate);
@@ -261,7 +257,7 @@ protected:
   CCriticalSection m_videoPlayerSection;
   struct SPlayerVideoInfo
   {
-    double pts;
+    double pts = 0;
     std::string decoderName;
     bool isHwDecoder;
     std::string deintMethod;
@@ -272,26 +268,26 @@ protected:
     float fps;
     float dar;
     bool m_isInterlaced;
-    int bitDepth;
-    StreamHdrType hdrType;
-    StreamHdrType sourceHdrType;
-    StreamHdrType sourceAdditionalHdrType;
-    AVColorSpace colorSpace;
-    AVColorRange colorRange;
-    AVColorPrimaries colorPrimaries;
-    AVColorTransferCharacteristic colorTransferCharacteristic;
+    int bitDepth = 0;
+    StreamHdrType hdrType = StreamHdrType::HDR_TYPE_NONE;
+    StreamHdrType sourceHdrType = StreamHdrType::HDR_TYPE_NONE;
+    StreamHdrType sourceAdditionalHdrType = StreamHdrType::HDR_TYPE_NONE;
+    AVColorSpace colorSpace = AVCOL_SPC_UNSPECIFIED;
+    AVColorRange colorRange = AVCOL_RANGE_UNSPECIFIED;
+    AVColorPrimaries colorPrimaries = AVCOL_PRI_UNSPECIFIED;
+    AVColorTransferCharacteristic colorTransferCharacteristic = AVCOL_TRC_UNSPECIFIED;
     AgedMap<uint64_t, DOVIFrameMetadata> doviFrameMetadataMap;
-    DOVIStreamMetadata doviStreamMetadata;
-    DOVIStreamInfo doviStreamInfo;
-    DOVIStreamInfo sourceDoViStreamInfo;
+    DOVIStreamMetadata doviStreamMetadata = {};
+    DOVIStreamInfo doviStreamInfo = {};
+    DOVIStreamInfo sourceDoViStreamInfo = {};
 
-    std::string doviCodecFourCC;
+    std::string doviCodecFourCC = "";
 
-    HDRStaticMetadataInfo hdrStaticMetadataInfo;
+    HDRStaticMetadataInfo hdrStaticMetadataInfo = {};
 
-    double liveBitRate;
-    int queueLevel;
-    int queueDataLevel;
+    double liveBitRate = 0;
+    int queueLevel = 0;
+    int queueDataLevel = 0;
   } m_playerVideoInfo;
 
   CCriticalSection m_audioPlayerSection;

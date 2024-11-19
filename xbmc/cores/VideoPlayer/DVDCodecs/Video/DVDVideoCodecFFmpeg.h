@@ -114,4 +114,7 @@ protected:
       VALID
     } m_state;
   } m_dropCtrl;
+
+private:
+  void SetProcessInfoVideoDetails();
 };
