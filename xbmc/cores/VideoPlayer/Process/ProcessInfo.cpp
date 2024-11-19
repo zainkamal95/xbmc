@@ -92,7 +92,6 @@ void CProcessInfo::ResetVideoCodecInfo()
   m_videoSourceDoViStreamInfo = {};
   m_videoDoViCodecFourCC = "";
   m_videoHDRStaticMetadataInfo = {};
-  m_videoVS10Mode = DOLBY_VISION_OUTPUT_MODE_BYPASS;
   m_videoLiveBitRate = 0;
   m_videoQueueLevel = 0;
   m_videoQueueDataLevel = 0;
@@ -126,7 +125,6 @@ void CProcessInfo::ResetVideoCodecInfo()
     m_dataCache->SetVideoSourceDoViStreamInfo(m_videoSourceDoViStreamInfo);
     m_dataCache->SetVideoDoViCodecFourCC(m_videoDoViCodecFourCC);
     m_dataCache->SetVideoHDRStaticMetadataInfo(m_videoHDRStaticMetadataInfo);
-    m_dataCache->SetVideoVS10Mode(m_videoVS10Mode);
     m_dataCache->SetVideoLiveBitRate(m_videoLiveBitRate);
     m_dataCache->SetVideoQueueLevel(m_videoQueueLevel);
     m_dataCache->SetVideoQueueDataLevel(m_videoQueueDataLevel);
@@ -481,23 +479,6 @@ HDRStaticMetadataInfo CProcessInfo::GetVideoHDRStaticMetadataInfo()
   std::unique_lock<CCriticalSection> lock(m_videoCodecSection);
 
   return m_videoHDRStaticMetadataInfo;
-}
-
-void CProcessInfo::SetVideoVS10Mode(unsigned int vs10Mode)
-{
-  std::unique_lock<CCriticalSection> lock(m_videoCodecSection);
-
-  m_videoVS10Mode= vs10Mode;
-
-  if (m_dataCache)
-    m_dataCache->SetVideoVS10Mode(m_videoVS10Mode);
-}
-
-unsigned int CProcessInfo::GetVideoVS10Mode()
-{
-  std::unique_lock<CCriticalSection> lock(m_videoCodecSection);
-
-  return m_videoVS10Mode;
 }
 
 void CProcessInfo::SetVideoLiveBitRate(double bitRate)

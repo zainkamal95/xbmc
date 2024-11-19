@@ -85,8 +85,6 @@ public:
   void SetVideoHDRStaticMetadataInfo(HDRStaticMetadataInfo value);
   HDRStaticMetadataInfo GetVideoHDRStaticMetadataInfo();
 
-  void SetVideoVS10Mode(unsigned int vs10Mode);
-  unsigned int GetVideoVS10Mode();
   void SetVideoLiveBitRate(double bitRate);
   double GetVideoLiveBitRate();
   void SetVideoQueueLevel(int level);
