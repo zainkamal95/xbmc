@@ -393,20 +393,6 @@ HDRStaticMetadataInfo CDataCacheCore::GetVideoHDRStaticMetadataInfo()
   return m_playerVideoInfo.hdrStaticMetadataInfo;
 }
 
-void CDataCacheCore::SetVideoVS10Mode(unsigned int vs10Mode)
-{
-  std::unique_lock<CCriticalSection> lock(m_videoPlayerSection);
-
-  m_playerVideoInfo.vs10Mode = vs10Mode;
-}
-
-unsigned int CDataCacheCore::GetVideoVS10Mode()
-{
-  std::unique_lock<CCriticalSection> lock(m_videoPlayerSection);
-
-  return m_playerVideoInfo.vs10Mode;
-}
-
 void CDataCacheCore::SetVideoLiveBitRate(double bitRate)
 {
   std::unique_lock<CCriticalSection> lock(m_videoPlayerSection);
