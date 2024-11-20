@@ -72,28 +72,6 @@ static void aml_dv_toggle_frame(unsigned int mode)
   }
 }
 
-static void aml_dv_wait_target_mode(unsigned int target_mode)
-{
-  // Wait for mode change, set toogle frame and then disable.
-  CSysfsPath dolby_vision_target_mode{"/sys/module/amdolby_vision/parameters/dolby_vision_target_mode"};
-  if (dolby_vision_target_mode.Exists())
-  {
-    CLog::Log(LOGINFO, "AMLUtils::{} - Target Mode Change - start - for mode [{}]", __FUNCTION__, aml_dv_output_mode_to_string(target_mode));
-    std::chrono::time_point<std::chrono::system_clock> now(std::chrono::system_clock::now());
-    while(true) { 
-      if (dolby_vision_target_mode.Get<unsigned int>().value() == target_mode) {
-        CLog::Log(LOGINFO, "AMLUtils::{} - Target Mode Change - done - for mode [{}]", __FUNCTION__, aml_dv_output_mode_to_string(target_mode));
-        break;
-      }
-      if ((std::chrono::system_clock::now() - now) >= std::chrono::milliseconds(3000)) {
-        CLog::Log(LOGINFO, "AMLUtils::{} - Target Mode Change - wait time elapsed - for mode [{}]", __FUNCTION__, aml_dv_output_mode_to_string(target_mode));
-        break;
-      } 
-      usleep(10000); // wait 10ms
-    }
-  }
-}
-
 static void aml_dv_wait_dv_std_vsif_packet()
 {
   // Wait for DV Std vsif packet being sent on HDMI.
@@ -552,10 +530,10 @@ unsigned int aml_dv_on(unsigned int mode)
     // Work around CD 12 bit issue for DV-Std shoule be CD 8 bit.
     // Wait for Dolby VSIF being output before trigging the update resolution so logic has correct input to work from.
     // The update resolution will cause the hdmi mode switch logic in the kernel to set the colour bit depth correctly in DV-Std.
-    if ((mode = DOLBY_VISION_OUTPUT_MODE_IPT_TUNNEL) && (dv_type == DV_TYPE_DISPLAY_LED))
+    if ((mode == DOLBY_VISION_OUTPUT_MODE_IPT_TUNNEL) && (dv_type == DV_TYPE_DISPLAY_LED))
       aml_dv_wait_dv_std_vsif_packet();
 
-    if ((mode = DOLBY_VISION_OUTPUT_MODE_IPT_TUNNEL) || (mode = DOLBY_VISION_OUTPUT_MODE_IPT)) {
+    if ((mode == DOLBY_VISION_OUTPUT_MODE_IPT_TUNNEL) || (mode == DOLBY_VISION_OUTPUT_MODE_IPT)) {
       aml_dv_trigger_update_resolution(StreamHdrType::HDR_TYPE_DOLBYVISION); // Required for 60Hz VS10 > DV.
       aml_dv_display_auto_now();
     }
@@ -566,18 +544,19 @@ unsigned int aml_dv_on(unsigned int mode)
 
 void aml_dv_off()
 {
-  // reset to baseline.
-  CSysfsPath("/sys/class/amdolby_vision/debug", "enable_fel 0");
-
   // change mode and disable.
   CSysfsPath dolby_vision_mode{"/sys/module/amdolby_vision/parameters/dolby_vision_mode"};
   bool modeChange(dolby_vision_mode.Get<unsigned int>().value() != DOLBY_VISION_OUTPUT_MODE_BYPASS);
   CLog::Log(LOGINFO, "AMLUtils::{} - mode change [{}]", __FUNCTION__, modeChange);
-  if (modeChange) CSysfsPath("/sys/module/amdolby_vision/parameters/dolby_vision_mode", DOLBY_VISION_OUTPUT_MODE_BYPASS);
-  CSysfsPath("/sys/module/amdolby_vision/parameters/dolby_vision_policy", DOLBY_VISION_FOLLOW_SOURCE);  
-  if (modeChange) aml_dv_wait_target_mode(DOLBY_VISION_OUTPUT_MODE_BYPASS);  
+
+  // First allow system to reset to follow source, then turn off DV.
+  CSysfsPath("/sys/module/amdolby_vision/parameters/dolby_vision_policy", DOLBY_VISION_FOLLOW_SOURCE);
   if (modeChange) aml_dv_toggle_frame(DOLBY_VISION_OUTPUT_MODE_BYPASS);
   CSysfsPath("/sys/module/amdolby_vision/parameters/dolby_vision_enable", "N");
+  
+  // Finally reset back to bypass for consistency.
+  CSysfsPath("/sys/module/amdolby_vision/parameters/dolby_vision_policy", DOLBY_VISION_FORCE_OUTPUT_MODE);
+  if (modeChange) CSysfsPath("/sys/module/amdolby_vision/parameters/dolby_vision_mode", DOLBY_VISION_OUTPUT_MODE_BYPASS);
 }
 
 unsigned int aml_dv_dolby_vision_mode()
