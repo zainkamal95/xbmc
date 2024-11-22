@@ -10325,6 +10325,12 @@ int CGUIInfoManager::TranslateSingleString(const std::string &strCondition, bool
           StringUtils::ToLower(paramCopy);
           return AddMultiInfo(CGUIInfo(SYSTEM_GET_BOOL, paramCopy));
         }
+        if (prop.name == "getint")
+        {
+          std::string paramCopy = param;
+          StringUtils::ToLower(paramCopy);
+          return AddMultiInfo(CGUIInfo(SYSTEM_GET_INT, paramCopy));
+        }
         for (const infomap& i : system_param)
         {
           if (prop.name == i.str)

@@ -392,6 +392,9 @@ bool CSystemGUIInfo::GetInt(int& value, const CGUIListItem *gitem, int contextWi
     case SYSTEM_CPU_USAGE:
       value = CServiceBroker::GetCPUInfo()->GetUsedPercentage();
       return true;
+    case SYSTEM_GET_INT:
+      value = CServiceBroker::GetSettingsComponent()->GetSettings()->GetInt(info.GetData3());
+      return true;
   }
 
   return false;
