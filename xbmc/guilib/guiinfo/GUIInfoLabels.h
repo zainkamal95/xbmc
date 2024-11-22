@@ -439,8 +439,9 @@
 #define SYSTEM_TOTAL_SPACE          681
 #define SYSTEM_USED_SPACE_PERCENT   682
 #define SYSTEM_FREE_SPACE_PERCENT   683
-#define SYSTEM_ADDON_IS_ENABLED     703
-#define SYSTEM_GET_BOOL             704
+#define SYSTEM_ADDON_IS_ENABLED     702
+#define SYSTEM_GET_BOOL             703
+#define SYSTEM_GET_INT              704
 #define SYSTEM_GET_CORE_USAGE       705
 #define SYSTEM_HAS_CORE_ID          706
 #define SYSTEM_RENDER_VENDOR        707
