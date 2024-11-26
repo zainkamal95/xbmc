@@ -49,7 +49,8 @@ class CDVDAudioCodec
 {
 public:
 
-  explicit CDVDAudioCodec(CProcessInfo &processInfo) : m_processInfo(processInfo) {}
+  explicit CDVDAudioCodec(CProcessInfo &processInfo) : m_processInfo(processInfo), 
+                                                       m_dataCacheCore(CServiceBroker::GetDataCacheCore()) {}
   virtual ~CDVDAudioCodec() = default;
 
   /*
@@ -120,4 +121,5 @@ public:
 
 protected:
   CProcessInfo &m_processInfo;
+  CDataCacheCore &m_dataCacheCore;
 };

@@ -93,20 +93,6 @@ bool CDataCacheCore::GetAVChange()
   return m_AVChange;
 }
 
-void CDataCacheCore::SetVideoPts(double pts)
-{
-  std::unique_lock<CCriticalSection> lock(m_videoPlayerSection);
-
-  m_playerVideoInfo.pts = pts;
-}
-
-double CDataCacheCore::GetVideoPts()
-{
-  std::unique_lock<CCriticalSection> lock(m_videoPlayerSection);
-
-  return m_playerVideoInfo.pts;
-}
-
 void CDataCacheCore::SetVideoDecoderName(std::string name, bool isHw)
 {
   std::unique_lock<CCriticalSection> lock(m_videoPlayerSection);
@@ -128,7 +114,6 @@ bool CDataCacheCore::IsVideoHwDecoder()
 
   return m_playerVideoInfo.isHwDecoder;
 }
-
 
 void CDataCacheCore::SetVideoDeintMethod(std::string method)
 {
@@ -192,6 +177,20 @@ int CDataCacheCore::GetVideoHeight()
   std::unique_lock<CCriticalSection> lock(m_videoPlayerSection);
 
   return m_playerVideoInfo.height;
+}
+
+void CDataCacheCore::SetVideoPts(double pts)
+{
+  std::unique_lock<CCriticalSection> lock(m_videoPlayerSection);
+
+  m_playerVideoInfo.pts = pts;
+}
+
+double CDataCacheCore::GetVideoPts()
+{
+  std::unique_lock<CCriticalSection> lock(m_videoPlayerSection);
+
+  return m_playerVideoInfo.pts;
 }
 
 void CDataCacheCore::SetVideoBitDepth(int bitDepth)
@@ -530,6 +529,20 @@ int CDataCacheCore::GetAudioBitsPerSample()
   std::unique_lock<CCriticalSection> lock(m_audioPlayerSection);
 
   return m_playerAudioInfo.bitsPerSample;
+}
+
+void CDataCacheCore::SetAudioPts(double pts)
+{
+  std::unique_lock<CCriticalSection> lock(m_audioPlayerSection);
+
+  m_playerAudioInfo.pts = pts;
+}
+
+double CDataCacheCore::GetAudioPts()
+{
+  std::unique_lock<CCriticalSection> lock(m_audioPlayerSection);
+
+  return m_playerAudioInfo.pts;
 }
 
 void CDataCacheCore::SetAudioIsDolbyAtmos(bool isDolbyAtmos)

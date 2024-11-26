@@ -112,6 +112,10 @@ public:
   int GetAudioSampleRate();
   void SetAudioBitsPerSample(int bitsPerSample);
   int GetAudioBitsPerSample();
+
+  // Additional Player Process Info data (Only set in Data Core Cache)
+  void SetAudioPts(double pts);
+  double GetAudioPts();
   void SetAudioIsDolbyAtmos(bool isDolbyAtmos);
   bool GetAudioIsDolbyAtmos();
   void SetAudioDtsXType(DtsXType dtsXType);
@@ -256,8 +260,7 @@ protected:
 
   CCriticalSection m_videoPlayerSection;
   struct SPlayerVideoInfo
-  {
-    double pts = 0;
+  {    
     std::string decoderName;
     bool isHwDecoder;
     std::string deintMethod;
@@ -268,6 +271,7 @@ protected:
     float fps;
     float dar;
     bool m_isInterlaced;
+    double pts = 0;
     int bitDepth = 0;
     StreamHdrType hdrType = StreamHdrType::HDR_TYPE_NONE;
     StreamHdrType sourceHdrType = StreamHdrType::HDR_TYPE_NONE;
@@ -297,6 +301,7 @@ protected:
     std::string channels;
     int sampleRate;
     int bitsPerSample;
+    double pts = 0;
     bool isDolbyAtmos = false;
     DtsXType dtsXType = DtsXType::DTS_X_NONE;
     double liveBitRate = 0;
