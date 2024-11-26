@@ -1292,7 +1292,9 @@ const infomap player_process[] = {{"videodecoder", PLAYER_PROCESS_VIDEODECODER},
                                   {"video.hdr.max.lum", PLAYER_PROCESS_VIDEO_HDR_MAX_LUM },
                                   {"video.hdr.colour.primaries", PLAYER_PROCESS_VIDEO_HDR_COLOUR_PRIMARIES },
 
+                                  {"audio.pts", PLAYER_PROCESS_AUDIO_PTS },
                                   {"video.pts", PLAYER_PROCESS_VIDEO_PTS },
+                                  {"diff.pts", PLAYER_PROCESS_DIFF_PTS },
 
                                   {"amlogic.pixformat", PLAYER_PROCESS_AML_PIXELFORMAT },
                                   {"amlogic.displaymode", PLAYER_PROCESS_AML_DISPLAYMODE },

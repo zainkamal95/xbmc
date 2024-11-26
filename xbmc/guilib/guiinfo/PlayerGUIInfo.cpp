@@ -519,6 +519,10 @@ bool CPlayerGUIInfo::GetLabel(std::string& value, const CFileItem *item, int con
     case PLAYER_PROCESS_AUDIOBITSPERSAMPLE:
       value = StringUtils::FormatNumber(CServiceBroker::GetDataCacheCore().GetAudioBitsPerSample());
       return true;
+
+    case PLAYER_PROCESS_AUDIO_PTS:
+      value = std::to_string(CServiceBroker::GetDataCacheCore().GetAudioPts());
+      return true;
     case PLAYER_PROCESS_AUDIO_IS_DOLBY_ATMOS:
       value = CServiceBroker::GetDataCacheCore().GetAudioIsDolbyAtmos() ? "Atmos" : "";
       return true;
@@ -754,6 +758,9 @@ bool CPlayerGUIInfo::GetLabel(std::string& value, const CFileItem *item, int con
 
     case PLAYER_PROCESS_AV_CHANGE:
       value = std::to_string(CServiceBroker::GetDataCacheCore().GetAVChange());
+      return true;
+    case PLAYER_PROCESS_DIFF_PTS:
+      value = std::to_string(CServiceBroker::GetDataCacheCore().GetVideoPts() - CServiceBroker::GetDataCacheCore().GetAudioPts());
       return true;
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
