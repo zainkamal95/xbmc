@@ -25,7 +25,7 @@
 class TiXmlNode;
 
 // Step used to increase/decrease audio delay
-static constexpr float AUDIO_DELAY_STEP = 0.025f;
+static constexpr float AUDIO_DELAY_STEP = 0.005f;
 
 typedef enum {
   WatchedModeAll        = 0,
