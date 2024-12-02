@@ -873,11 +873,14 @@ void CRenderManager::PresentBlend(bool clear, DWORD flags, DWORD alpha)
 void CRenderManager::UpdateLatencyTweak()
 {
   float fps = CServiceBroker::GetWinSystem()->GetGfxContext().GetFPS();
+  const RESOLUTION_INFO res = CServiceBroker::GetWinSystem()->GetGfxContext().GetResInfo();
+
   float refresh = fps;
   if (CServiceBroker::GetWinSystem()->GetGfxContext().GetVideoResolution() == RES_WINDOW)
     refresh = 0; // No idea about refresh rate when windowed, just get the default latency
   m_latencyTweak = static_cast<double>(
-      CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->GetLatencyTweak(refresh));
+      CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->GetLatencyTweak(
+          refresh, res.iScreenHeight));
 }
 
 void CRenderManager::UpdateResolution()
