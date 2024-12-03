@@ -1295,6 +1295,9 @@ void CRenderManager::PrepareNextRender()
     m_presentpts = m_Queue[m_presentsource].pts - m_displayLatency - frametime / 2;
     m_presentevent.notifyAll();
   }
+
+  m_dataCacheCore.SetRenderPts(m_Queue[m_presentsource].pts);
+
 }
 
 void CRenderManager::DiscardBuffer()
