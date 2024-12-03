@@ -316,8 +316,8 @@ DOVIFrameMetadata CDataCacheCore::GetVideoDoViFrameMetadata()
 {
   std::unique_lock<CCriticalSection> lock(m_videoPlayerSection);
 
-  auto doviFrameMetadata = m_playerVideoInfo.doviFrameMetadataMap.findOrLatest(m_playerVideoInfo.pts);
-  if (doviFrameMetadata != m_playerVideoInfo.doviFrameMetadataMap.end()) 
+  auto doviFrameMetadata = m_playerVideoInfo.doviFrameMetadataMap.findOrLatest(GetRenderPts());
+  if (doviFrameMetadata != m_playerVideoInfo.doviFrameMetadataMap.end())
     return doviFrameMetadata->second;
   return {};
 }
@@ -675,6 +675,20 @@ bool CDataCacheCore::IsRenderClockSync()
   std::unique_lock<CCriticalSection> lock(m_renderSection);
 
   return m_renderInfo.m_isClockSync;
+}
+
+void CDataCacheCore::SetRenderPts(double pts)
+{
+  std::unique_lock<CCriticalSection> lock(m_renderSection);
+
+  m_renderInfo.pts = pts;
+}
+
+double CDataCacheCore::GetRenderPts()
+{
+  std::unique_lock<CCriticalSection> lock(m_renderSection);
+
+  return m_renderInfo.pts;
 }
 
 // player states

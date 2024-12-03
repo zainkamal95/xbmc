@@ -47,7 +47,9 @@ unsigned int CRenderManager::m_nextCaptureId = 0;
 
 CRenderManager::CRenderManager(CDVDClock &clock, IRenderMsg *player) :
   m_dvdClock(clock),
-  m_playerPort(player)
+  m_playerPort(player),
+  m_dataCacheCore(CServiceBroker::GetDataCacheCore()),
+  m_appPlayer(CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayer>())
 {
 }
 
@@ -1295,6 +1297,9 @@ void CRenderManager::PrepareNextRender()
     m_presentpts = m_Queue[m_presentsource].pts - m_displayLatency - frametime / 2;
     m_presentevent.notifyAll();
   }
+
+  m_dataCacheCore.SetRenderPts(m_Queue[m_presentsource].pts);
+
 }
 
 void CRenderManager::DiscardBuffer()

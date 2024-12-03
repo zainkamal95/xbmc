@@ -10,9 +10,11 @@
 
 #include "DVDClock.h"
 #include "DebugRenderer.h"
+#include "cores/DataCacheCore.h"
 #include "cores/VideoPlayer/VideoRenderers/BaseRenderer.h"
 #include "cores/VideoPlayer/VideoRenderers/OverlayRenderer.h"
 #include "cores/VideoSettings.h"
+#include "application/ApplicationPlayer.h"
 #include "threads/CriticalSection.h"
 #include "threads/Event.h"
 #include "threads/SystemClock.h"
@@ -248,4 +250,8 @@ protected:
   //set to true when adding something to m_captures, set to false when m_captures is made empty
   //std::list::empty() isn't thread safe, using an extra bool will save a lock per render when no captures are requested
   bool m_hasCaptures = false;
+
+private:
+  CDataCacheCore &m_dataCacheCore;
+  std::shared_ptr<const CApplicationPlayer> m_appPlayer;
 };
