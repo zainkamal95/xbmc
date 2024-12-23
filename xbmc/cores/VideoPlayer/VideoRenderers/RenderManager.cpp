@@ -707,7 +707,7 @@ void CRenderManager::Render(bool clear, DWORD flags, DWORD alpha, bool gui)
 
   if (!gui || m_pRenderer->IsGuiLayer())
   {
-    SPresent& m = m_Queue[m_presentsource];
+    const SPresent& m = m_Queue[m_presentsource];
 
     if( m.presentmethod == PRESENT_METHOD_BOB )
       PresentFields(clear, flags, alpha);
