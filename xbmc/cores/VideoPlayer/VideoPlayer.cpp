@@ -1349,7 +1349,7 @@ void CVideoPlayer::Prepare()
 
     if (m_pSubtitleDemuxer)
     {
-      if(m_pSubtitleDemuxer->SeekTime(starttime, true, &startpts))
+      if (m_pSubtitleDemuxer->SeekTime(starttime, false, &startpts))
         CLog::Log(LOGDEBUG, "{} - starting subtitle demuxer from: {}", __FUNCTION__, starttime);
       else
         CLog::Log(LOGDEBUG, "{} - failed to start subtitle demuxing from: {}", __FUNCTION__,
