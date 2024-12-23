@@ -205,9 +205,9 @@ bool CRenderManager::Configure()
     m_queued.clear();
     m_discard.clear();
     m_free.clear();
-    m_presentsource = 0;
+    m_presentsource = -1;
     m_presentsourcePast = -1;
-    for (int i=1; i < m_QueueSize; i++)
+    for (int i = 0; i < m_QueueSize; i++)
       m_free.push_back(i);
 
     m_bRenderGUI = true;
@@ -431,10 +431,10 @@ bool CRenderManager::Flush(bool wait, bool saveBuffers)
         m_queued.clear();
         m_discard.clear();
         m_free.clear();
-        m_presentsource = 0;
+        m_presentsource = -1;
         m_presentsourcePast = -1;
         m_presentstep = PRESENT_IDLE;
-        for (int i = 1; i < m_QueueSize; i++)
+        for (int i = 0; i < m_QueueSize; i++)
           m_free.push_back(i);
       }
 
@@ -1264,7 +1264,7 @@ void CRenderManager::PrepareNextRender()
       m_lateframes = 0;
 
     m_presentstep = PRESENT_FLIP;
-    m_discard.push_back(m_presentsource);
+    if (m_presentsource != -1) m_discard.push_back(m_presentsource);
     m_presentsource = idx;
     m_queued.pop_front();
     m_presentpts = m_Queue[idx].pts - m_displayLatency;
