@@ -351,6 +351,7 @@ void CVideoPlayerVideo::Process()
   std::string vfmt;
   int vfmtCheckCount = 0;
 
+  m_picture.Reset();
   m_videoStats.Start();
   m_droppingStats.Reset();
   m_iDroppedFrames = 0;
