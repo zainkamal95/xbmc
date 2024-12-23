@@ -78,7 +78,7 @@ CVideoPlayerAudio::~CVideoPlayerAudio()
 bool CVideoPlayerAudio::OpenStream(CDVDStreamInfo hints)
 {
   CLog::Log(LOGINFO, "Finding audio codec for: {}", hints.codec);
-  bool allowpassthrough = !CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(CSettings::SETTING_VIDEOPLAYER_USEDISPLAYASCLOCK);
+  bool allowpassthrough = true;
 
   CAEStreamInfo::DataType streamType =
       m_audioSink.GetPassthroughStreamType(hints.codec, hints.samplerate, hints.profile);
@@ -128,9 +128,7 @@ void CVideoPlayerAudio::OpenStream(CDVDStreamInfo& hints, std::unique_ptr<CDVDAu
   m_stalled = m_messageQueue.GetPacketCount(CDVDMsg::DEMUXER_PACKET) == 0;
 
   m_prevsynctype = -1;
-  m_synctype = SYNC_DISCON;
-  if (CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(CSettings::SETTING_VIDEOPLAYER_USEDISPLAYASCLOCK))
-    m_synctype = SYNC_RESAMPLE;
+  m_synctype = m_processInfo.IsRealtimeStream() ? SYNC_RESAMPLE : SYNC_DISCON;
 
   if (m_synctype == SYNC_DISCON)
     CLog::LogF(LOGINFO, "Allowing max Out-Of-Sync Value of {} ms", m_disconAdjustTimeMs);
@@ -667,7 +665,7 @@ bool CVideoPlayerAudio::SwitchCodecIfNeeded()
 
   m_displayReset = false;
 
-  bool allowpassthrough = !CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(CSettings::SETTING_VIDEOPLAYER_USEDISPLAYASCLOCK);
+  bool allowpassthrough = true;
   if (m_synctype == SYNC_RESAMPLE)
     allowpassthrough = false;
 
