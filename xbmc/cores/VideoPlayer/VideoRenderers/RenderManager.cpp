@@ -1247,6 +1247,10 @@ void CRenderManager::PrepareNextRender()
       ++iter;
     }
 
+
+    // push back present source index before other lates to keep order
+    if (m_presentsource != -1) m_discard.push_back(m_presentsource);
+
     // skip late frames
     while (m_queued.front() != idx)
     {
@@ -1263,7 +1267,6 @@ void CRenderManager::PrepareNextRender()
       m_lateframes = 0;
 
     m_presentstep = PRESENT_FLIP;
-    if (m_presentsource != -1) m_discard.push_back(m_presentsource);
     m_presentsource = idx;
     m_queued.pop_front();
     m_presentpts = m_Queue[idx].pts - m_displayLatency;
