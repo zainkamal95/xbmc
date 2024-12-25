@@ -177,16 +177,20 @@ void CRendererAML::RenderUpdate(int index, int index2, bool clear, unsigned int 
 {
   ManageRenderArea();
 
-  CAMLVideoBuffer *amli = dynamic_cast<CAMLVideoBuffer *>(m_buffers[index].videoBuffer);
-  if(amli && amli->m_amlCodec)
+  CVideoBuffer* videoBuffer = m_buffers[index].videoBuffer;
+  if (videoBuffer)
   {
-    int pts = amli->m_omxPts;
-    if (pts != m_prevVPts)
+    CAMLVideoBuffer *amli = dynamic_cast<CAMLVideoBuffer *>(videoBuffer);
+    if (amli->m_amlCodec)
     {
-      amli->m_amlCodec->ReleaseFrame(amli->m_bufferIndex);
-      amli->m_amlCodec->SetVideoRect(m_sourceRect, m_destRect);
-      amli->m_amlCodec = nullptr; //Mark frame as processed
-      m_prevVPts = pts;
+      int pts = amli->m_omxPts;
+      if (pts != m_prevVPts)
+      {
+        amli->m_amlCodec->ReleaseFrame(amli->m_bufferIndex);
+        amli->m_amlCodec->SetVideoRect(m_sourceRect, m_destRect);
+        amli->m_amlCodec = nullptr; //Mark frame as processed
+        m_prevVPts = pts;
+      }
     }
   }
   CAMLCodec::PollFrame();
