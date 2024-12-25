@@ -1045,7 +1045,6 @@ bool CRenderManager::AddVideoPicture(const VideoPicture& picture, volatile std::
   m.pts = picture.pts;
   m_queued.push_back(m_free.front());
   m_free.pop_front();
-  m_playerPort->UpdateRenderBuffers(m_queued.size(), m_discard.size(), m_free.size());
 
   // signal to any waiters to check state
   if (m_presentstep == PRESENT_IDLE)
@@ -1270,7 +1269,6 @@ void CRenderManager::PrepareNextRender()
     m_presentpts = m_Queue[idx].pts - m_displayLatency;
     m_presentevent.notifyAll();
 
-    m_playerPort->UpdateRenderBuffers(m_queued.size(), m_discard.size(), m_free.size());
   }
   else if (!combined && renderPts > (nextFramePts - frametime))
   {
