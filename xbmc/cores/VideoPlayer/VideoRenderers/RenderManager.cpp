@@ -1057,7 +1057,7 @@ bool CRenderManager::AddVideoPicture(const VideoPicture& picture, volatile std::
   m.presentfield = displayField;
   m.presentmethod = presentmethod;
   m.pts = picture.pts;
-  m_queued.push_back(m_free.front());
+  m_queued.push_back(index);
   m_free.pop_front();
 
   // signal to any waiters to check state
