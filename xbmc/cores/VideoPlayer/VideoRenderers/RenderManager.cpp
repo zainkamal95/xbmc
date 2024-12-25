@@ -1178,6 +1178,11 @@ void CRenderManager::PrepareNextRender()
 
   double renderPts = frameOnScreen + m_displayLatency;
 
+  // Make sure the queued are sorted by pts and no duplicates.
+  std::sort(m_queued.begin(), m_queued.end(), [this](int a, int b) { return m_Queue[a].pts < m_Queue[b].pts; });
+  auto last = std::unique(m_queued.begin(), m_queued.end());
+  m_queued.erase(last, m_queued.end());
+
   double nextFramePts = m_Queue[m_queued.front()].pts;
   if (m_dvdClock.GetClockSpeed() < 0)
     nextFramePts = renderPts;
