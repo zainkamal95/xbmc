@@ -20,7 +20,7 @@
 #include <vector>
 
 #define MAX_FIELDS 3
-#define NUM_BUFFERS 18
+#define NUM_BUFFERS 16
 
 class CSetting;
 struct IntegerSettingOption;
