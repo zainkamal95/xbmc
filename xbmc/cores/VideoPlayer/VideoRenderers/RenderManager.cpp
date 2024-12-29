@@ -1184,7 +1184,11 @@ void CRenderManager::PrepareNextRender()
   if (!m_showVideo && !m_forceNext)
     return;
 
-  double frameOnScreen = m_dvdClock.GetClock();
+  // Make sure the queued are sorted by pts and no duplicates.
+  std::sort(m_queued.begin(), m_queued.end(), [this](int a, int b) { return m_Queue[a].pts < m_Queue[b].pts; });
+  auto last = std::unique(m_queued.begin(), m_queued.end());
+  m_queued.erase(last, m_queued.end());
+
   double frametime = 1.0 /
                      static_cast<double>(CServiceBroker::GetWinSystem()->GetGfxContext().GetFPS()) *
                      DVD_TIME_BASE;
@@ -1195,14 +1199,11 @@ void CRenderManager::PrepareNextRender()
       m_videoDelay -
       static_cast<double>(CServiceBroker::GetWinSystem()->GetFrameLatencyAdjustment()));
 
+  double frameOnScreen = m_dvdClock.GetClock();
   double renderPts = frameOnScreen + m_displayLatency;
 
-  // Make sure the queued are sorted by pts and no duplicates.
-  std::sort(m_queued.begin(), m_queued.end(), [this](int a, int b) { return m_Queue[a].pts < m_Queue[b].pts; });
-  auto last = std::unique(m_queued.begin(), m_queued.end());
-  m_queued.erase(last, m_queued.end());
-
-  double nextFramePts = m_Queue[m_queued.front()].pts;
+  int nextFrameIndex = m_queued.front();
+  double nextFramePts = m_Queue[nextFrameIndex].pts;
   if (m_dvdClock.GetClockSpeed() < 0)
     nextFramePts = renderPts;
 
@@ -1240,51 +1241,33 @@ void CRenderManager::PrepareNextRender()
     m_presentsourcePast = -1;
     combined = true;
   }
-
-  //if (renderPts >= nextFramePts && !m_forceNext)
-  //  aml_video_mute(false);
-
+ 
   if (renderPts >= nextFramePts || m_forceNext)
   {
-    // see if any future queued frames are already due
-    auto iter = m_queued.begin();
-    int idx = *iter;
-    int lateframes = 0;
-    int queue_size = m_queued.size();
-
-    while (iter != m_queued.end())
-    {
-      // the slot for rendering in time is [pts .. (pts +  x * frametime)]
-      // renderer/drivers have internal queues, being slightly late here does not mean that
-      // we are really late. The likelihood that we recover decreases the greater m_lateframes
-      // get. Skipping a frame is easier than having decoder dropping one (lateframes > 10)
-      double x = (m_lateframes <= 6) ? 0.98 : 0;
-      if ((renderPts - frametime * queue_size) < (m_Queue[*iter].pts + x * frametime))
-        break;
-      lateframes++;
-      queue_size--;
-      idx = *iter;
-      ++iter;
-    }
-
-
     // push back present source index before other lates to keep order
-    if (m_presentsource != -1) m_discard.push_back(m_presentsource);
-
-    // skip late frames
-    while (m_queued.front() != idx)
+    if (m_presentsource != -1) 
     {
+      m_discard.push_back(m_presentsource);
+   }
+
+    double diff = (renderPts - nextFramePts);
+    while (diff > 62000 && m_queued.size() > 2)
+    {
+      // skip late frames if possible; if the queue is almost empty, we don't skip
+      // even if we should to avoid emptying the queue too fast
       int late = m_queued.front();
       m_queued.pop_front();
 
       m_discard.push_back(late);
       m_QueueSkip++;
+
+      diff = (renderPts - m_Queue[m_queued.front()].pts);
     }
 
-    if (lateframes)
-      m_lateframes += lateframes;
-    else
-      m_lateframes = 0;
+    int idx = m_queued.front();
+
+    double lateframes = diff / frametime;
+    m_lateframes = (int) (lateframes > 0. ? lateframes : 0.);
 
     m_presentstep = PRESENT_FLIP;
     m_presentsource = idx;
