@@ -64,9 +64,6 @@ bool CRendererAML::Configure(const VideoPicture &picture, float fps, unsigned in
   SetViewMode(m_videoSettings.m_ViewMode);
   ManageRenderArea();
 
-  // Configure GUI/OSD for HDR PQ when display is in HDR PQ mode
-  aml_set_transfer_pq(picture.hdrType, picture.colorBits);
-
   m_bConfigured = true;
 
   return true;

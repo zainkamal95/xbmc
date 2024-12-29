@@ -2068,6 +2068,9 @@ bool CAMLCodec::OpenDecoder()
 
   aml_dv_open(hints.hdrType, hints.bitdepth);
 
+  // Now have the HDRType resolved, ok to set the transfer pq - so renderer can set the shaders as needed.
+  aml_set_transfer_pq(hints.hdrType, hints.bitdepth);
+
   SetProcessInfoVideoDetails();
 
   // Setup Codec for DV Content

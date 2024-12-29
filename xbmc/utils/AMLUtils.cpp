@@ -655,9 +655,8 @@ void aml_set_transfer_pq(StreamHdrType hdrType, unsigned int bitDepth) {
   bool dv_on(aml_dv_mode() != DV_MODE_OFF);
   bool hdr(false);
 
-  if (hdr_display) { // Only relevant with an hdr_display 
-
-    // FIXME: hdrType will not be correct for hdr10+ until upstream can identify correctly.
+  if (hdr_display) // Only relevant with an hdr_display 
+  {
     // TODO: any need to test display supports each hdr content (inc fallback) specifically?
     hdr = (hdrType != StreamHdrType::HDR_TYPE_NONE);
 
