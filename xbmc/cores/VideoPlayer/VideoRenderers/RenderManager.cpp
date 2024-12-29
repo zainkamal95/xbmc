@@ -239,6 +239,8 @@ bool CRenderManager::Configure()
 
     m_renderState = STATE_CONFIGURED;
 
+    UpdateResolution(true);
+
     CLog::Log(LOGDEBUG, "CRenderManager::Configure - {}", m_QueueSize);
   }
   else
@@ -899,11 +901,14 @@ void CRenderManager::UpdateLatencyTweak()
           refresh, res.iScreenHeight));
 }
 
-void CRenderManager::UpdateResolution()
+void CRenderManager::UpdateResolution(bool force)
 {
+  std::unique_lock<CCriticalSection> lock(m_resolutionlock);
   if (m_bTriggerUpdateResolution)
   {
-    if (CServiceBroker::GetWinSystem()->GetGfxContext().IsFullScreenVideo() && CServiceBroker::GetWinSystem()->GetGfxContext().IsFullScreenRoot())
+    if (force ||
+        (CServiceBroker::GetWinSystem()->GetGfxContext().IsFullScreenVideo() &&
+         CServiceBroker::GetWinSystem()->GetGfxContext().IsFullScreenRoot()))
     {
       RENDER_STEREO_MODE user_stereo_mode =
         CServiceBroker::GetGUI()->GetStereoscopicsManager().GetStereoModeByUser();
