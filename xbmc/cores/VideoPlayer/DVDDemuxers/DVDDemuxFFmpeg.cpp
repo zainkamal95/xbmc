@@ -1666,6 +1666,10 @@ CDemuxStream* CDVDDemuxFFmpeg::AddStream(int streamIdx)
         if (st->iBitsPerSample == 0)
           st->iBitsPerSample = pStream->codecpar->bits_per_coded_sample;
 
+        if (st->iBitRate == 0)
+          if (auto tag = av_dict_get(pStream->metadata, "BPS", NULL, 0))
+            st->iBitRate = std::stoi(tag->value);
+
         if (av_dict_get(pStream->metadata, "title", NULL, 0))
           st->m_description = av_dict_get(pStream->metadata, "title", NULL, 0)->value;
 
@@ -1767,6 +1771,10 @@ CDemuxStream* CDVDDemuxFFmpeg::AddStream(int streamIdx)
         if (desc != nullptr)
           st->bitDepth = desc->comp[0].depth;
 
+        if (st->iBitRate == 0)
+          if (auto tag = av_dict_get(pStream->metadata, "BPS", NULL, 0))
+            st->iBitRate = std::stoi(tag->value);
+    
         st->colorPrimaries = pStream->codecpar->color_primaries;
         st->colorSpace = pStream->codecpar->color_space;
         st->colorTransferCharacteristic = pStream->codecpar->color_trc;
