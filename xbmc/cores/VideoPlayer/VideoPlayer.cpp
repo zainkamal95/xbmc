@@ -3659,18 +3659,10 @@ bool CVideoPlayer::OpenStream(CCurrentStream& current, int64_t demuxerId, int iS
   switch(current.type)
   {
     case STREAM_AUDIO:
-      {
-      CDemuxStreamAudio *source = dynamic_cast<CDemuxStreamAudio*>(stream);
-      if (source) CLog::Log(LOGINFO, "cpmtest audio bitrate [{}]", source->iBitRate);
       res = OpenAudioStream(hint, reset);
-      }
       break;
     case STREAM_VIDEO:
-      {
-      CDemuxStreamVideo *source = dynamic_cast<CDemuxStreamVideo*>(stream);
-      if (source) CLog::Log(LOGINFO, "cpmtest video bitrate [{}]", source->iBitRate);      
       res = OpenVideoStream(hint, reset);
-      }
       break;
     case STREAM_SUBTITLE:
       res = OpenSubtitleStream(hint);
