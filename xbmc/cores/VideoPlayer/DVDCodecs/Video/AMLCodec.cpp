@@ -2558,11 +2558,10 @@ int CAMLCodec::PollFrame()
     return 0;
 
   struct pollfd codec_poll_fd[1];
-  std::chrono::time_point<std::chrono::system_clock> now(std::chrono::system_clock::now());
-
   codec_poll_fd[0].fd = m_pollDevice;
   codec_poll_fd[0].events = POLLOUT;
 
+  std::chrono::time_point<std::chrono::system_clock> now(std::chrono::system_clock::now());
   poll(codec_poll_fd, 1, 50);
   g_aml_sync_event.Set();
   int elapsed = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - now).count();
