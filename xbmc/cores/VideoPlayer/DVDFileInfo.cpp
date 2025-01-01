@@ -260,8 +260,12 @@ bool CDVDFileInfo::CanExtract(const CFileItem& fileItem)
       // per addon instance), pvr recording thumbnail extraction does not work (reliably).
       URIUtils::IsPVRRecording(fileItem.GetDynPath()) ||
       // plugin path not fully resolved
-      URIUtils::IsPlugin(fileItem.GetDynPath()) || URIUtils::IsUPnP(fileItem.GetPath()) ||
-      fileItem.IsInternetStream() || fileItem.IsDiscStub() || fileItem.IsPlayList())
+      URIUtils::IsPlugin(fileItem.GetDynPath()) ||
+      URIUtils::IsUPnP(fileItem.GetPath()) ||
+      (fileItem.IsInternetStream() && // For internet protocol streams - if it is HTTP or FTP and on lan then ok to extract, otherwise not ok.
+       (!((URIUtils::IsFTP(fileItem.GetPath()) || URIUtils::IsHTTP(fileItem.GetPath())) && URIUtils::IsOnLAN(fileItem.GetPath())))) ||
+      fileItem.IsDiscStub() ||
+      fileItem.IsPlayList())
     return false;
 
   // mostly can't extract from discs and files from discs.
