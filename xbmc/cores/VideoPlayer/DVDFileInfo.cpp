@@ -190,8 +190,8 @@ std::unique_ptr<CTexture> CDVDFileInfo::ExtractThumbToTexture(const CFileItem& f
           iDecoderState = CDVDVideoCodec::VC_NONE;
           while (iDecoderState == CDVDVideoCodec::VC_NONE)
           {
-            iDecoderState = pVideoCodec->GetPicture(&picture);
             picture.Reset();
+            iDecoderState = pVideoCodec->GetPicture(&picture);
           }
 
           if (iDecoderState == CDVDVideoCodec::VC_PICTURE)
@@ -237,6 +237,7 @@ std::unique_ptr<CTexture> CDVDFileInfo::ExtractThumbToTexture(const CFileItem& f
         {
           CLog::LogF(LOGDEBUG, "decode failed in {} after {} packets.", redactPath, packetsTried);
         }
+        picture.Reset();
       }
     }
   }
