@@ -957,7 +957,7 @@ float CGraphicContext::GetDisplayLatency() const
   if (latency < 0.0f)
   {
     // fallback
-    latency = (CServiceBroker::GetWinSystem()->NoOfBuffers() + 1) / GetFPS() * 1000.0f;
+    latency = 1 / GetFPS() * 1000.0f;
   }
 
   return latency;
