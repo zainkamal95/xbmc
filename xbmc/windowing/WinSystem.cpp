@@ -247,12 +247,6 @@ std::string CWinSystemBase::GetClipboardText(void)
   return "";
 }
 
-int CWinSystemBase::NoOfBuffers(void)
-{
-  int buffers = CServiceBroker::GetSettingsComponent()->GetSettings()->GetInt(CSettings::SETTING_VIDEOSCREEN_NOOFBUFFERS);
-  return buffers;
-}
-
 KODI::WINDOWING::COSScreenSaverManager* CWinSystemBase::GetOSScreenSaver()
 {
   if (!m_screenSaverManager)

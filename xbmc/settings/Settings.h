@@ -375,7 +375,6 @@ public:
   static constexpr auto SETTING_VIDEOSCREEN_STEREOSCOPICMODE = "videoscreen.stereoscopicmode";
   static constexpr auto SETTING_VIDEOSCREEN_PREFEREDSTEREOSCOPICMODE =
       "videoscreen.preferedstereoscopicmode";
-  static constexpr auto SETTING_VIDEOSCREEN_NOOFBUFFERS = "videoscreen.noofbuffers";
   static constexpr auto SETTING_VIDEOSCREEN_3DLUT = "videoscreen.cms3dlut";
   static constexpr auto SETTING_VIDEOSCREEN_DISPLAYPROFILE = "videoscreen.displayprofile";
   static constexpr auto SETTING_VIDEOSCREEN_GUICALIBRATION = "videoscreen.guicalibration";

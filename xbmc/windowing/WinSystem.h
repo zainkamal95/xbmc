@@ -81,8 +81,6 @@ public:
   virtual bool HasInertialGestures(){ return false; }
   //does the output expect limited color range (ie 16-235)
   virtual bool UseLimitedColor();
-  //the number of presentation buffers
-  virtual int NoOfBuffers();
 
   /*!
    * \brief Forces the window to fullscreen provided the window resolution
