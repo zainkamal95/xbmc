@@ -179,20 +179,6 @@ int CDataCacheCore::GetVideoHeight()
   return m_playerVideoInfo.height;
 }
 
-void CDataCacheCore::SetVideoPts(double pts)
-{
-  std::unique_lock<CCriticalSection> lock(m_videoPlayerSection);
-
-  m_playerVideoInfo.pts = pts;
-}
-
-double CDataCacheCore::GetVideoPts()
-{
-  std::unique_lock<CCriticalSection> lock(m_videoPlayerSection);
-
-  return m_playerVideoInfo.pts;
-}
-
 void CDataCacheCore::SetVideoBitDepth(int bitDepth)
 {
   std::unique_lock<CCriticalSection> lock(m_videoPlayerSection);
@@ -529,20 +515,6 @@ int CDataCacheCore::GetAudioBitsPerSample()
   std::unique_lock<CCriticalSection> lock(m_audioPlayerSection);
 
   return m_playerAudioInfo.bitsPerSample;
-}
-
-void CDataCacheCore::SetAudioPts(double pts)
-{
-  std::unique_lock<CCriticalSection> lock(m_audioPlayerSection);
-
-  m_playerAudioInfo.pts = pts;
-}
-
-double CDataCacheCore::GetAudioPts()
-{
-  std::unique_lock<CCriticalSection> lock(m_audioPlayerSection);
-
-  return m_playerAudioInfo.pts;
 }
 
 void CDataCacheCore::SetAudioIsDolbyAtmos(bool isDolbyAtmos)
