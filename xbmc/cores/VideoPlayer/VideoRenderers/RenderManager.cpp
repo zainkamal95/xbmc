@@ -219,7 +219,8 @@ bool CRenderManager::Configure()
     m_queued.clear();
     m_discard.clear();
     m_free.clear();
-    m_presentsource = -1;
+    m_presentstarted = false;
+    m_presentsource = 0;
     m_presentsourcePast = -1;
     for (int i = 0; i < m_QueueSize; i++)
       m_free.push_back(i);
@@ -448,7 +449,8 @@ bool CRenderManager::Flush(bool wait, bool saveBuffers)
         m_queued.clear();
         m_discard.clear();
         m_free.clear();
-        m_presentsource = -1;
+        m_presentstarted = false;
+        m_presentsource = 0;
         m_presentsourcePast = -1;
         m_presentstep = PRESENT_IDLE;
         for (int i = 0; i < m_QueueSize; i++)
@@ -1245,10 +1247,7 @@ void CRenderManager::PrepareNextRender()
   if (renderPts >= nextFramePts || m_forceNext)
   {
     // push back present source index before other lates to keep order
-    if (m_presentsource != -1) 
-    {
-      m_discard.push_back(m_presentsource);
-   }
+    if (m_presentstarted) m_discard.push_back(m_presentsource);
 
     double diff = (renderPts - nextFramePts);
     while (diff > 62000 && m_queued.size() > 2)
@@ -1271,6 +1270,7 @@ void CRenderManager::PrepareNextRender()
 
     m_presentstep = PRESENT_FLIP;
     m_presentsource = idx;
+    m_presentstarted = true;
     m_queued.pop_front();
     m_presentpts = m_Queue[idx].pts - m_displayLatency;
     m_presentevent.notifyAll();
@@ -1282,12 +1282,13 @@ void CRenderManager::PrepareNextRender()
     m_presentstep = PRESENT_FLIP;
     m_presentsourcePast = m_presentsource;
     m_presentsource = m_queued.front();
+    m_presentstarted = true;
     m_queued.pop_front();
     m_presentpts = m_Queue[m_presentsource].pts - m_displayLatency - frametime / 2;
     m_presentevent.notifyAll();
   }
 
-  m_dataCacheCore.SetRenderPts(m_Queue[m_presentsource].pts);
+  if (m_presentstarted) m_dataCacheCore.SetRenderPts(m_Queue[m_presentsource].pts);
 
 }
 
