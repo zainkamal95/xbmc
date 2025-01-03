@@ -222,6 +222,7 @@ protected:
   EPRESENTSTEP m_presentstep = PRESENT_IDLE;
   XbmcThreads::EndTime<> m_presentTimer;
   bool m_forceNext = false;
+  bool m_presentstarted = false;
   int m_presentsource = 0;
   int m_presentsourcePast = -1;
   XbmcThreads::ConditionVariable m_presentevent;
