@@ -1404,7 +1404,7 @@ float CAdvancedSettings::GetLatencyTweak(float refreshrate,
   {
     RefreshVideoLatency& videolatency = m_videoRefreshLatency[i];
     if ((refreshrate >= videolatency.refreshmin && refreshrate <= videolatency.refreshmax) &&
-        (videolatency.resolution == resolution || videolatency.resolution == 0));
+        (videolatency.resolution == resolution || videolatency.resolution == 0))
       delay = videolatency.delay;
   }
 
