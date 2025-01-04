@@ -21,9 +21,7 @@ std::string CDemuxStreamAudio::GetStreamType()
       break;
     case AV_CODEC_ID_EAC3:
     {
-      //! @todo: With ffmpeg >= 6.1 add new atmos profile case
-      // "JOC" its EAC3 Atmos underlying profile, there is no standard codec name string
-      if (StringUtils::Contains(codecName, "JOC"))
+      if (profile == FF_PROFILE_EAC3_DDP_ATMOS)
         strInfo = "DD+ ATMOS ";
       else
         strInfo = "DD+ ";
@@ -31,7 +29,7 @@ std::string CDemuxStreamAudio::GetStreamType()
     }
     case AV_CODEC_ID_DTS:
     {
-      //! @todo: With ffmpeg >= 6.1 add new DTSX profile cases
+      //! @todo: add DTS-HD HRA X profile when/if detection becomes available
       switch (profile)
       {
         case FF_PROFILE_DTS_96_24:
@@ -49,6 +47,12 @@ std::string CDemuxStreamAudio::GetStreamType()
         case FF_PROFILE_DTS_HD_HRA:
           strInfo = "DTS-HD HRA ";
           break;
+        case FF_PROFILE_DTS_HD_MA_X:
+          strInfo = "DTS-HD MA X ";
+          break;
+        case FF_PROFILE_DTS_HD_MA_X_IMAX:
+          strInfo = "DTS-HD MA X (IMAX) ";
+          break;
         default:
           strInfo = "DTS ";
           break;
@@ -62,7 +66,10 @@ std::string CDemuxStreamAudio::GetStreamType()
       strInfo = "MP3 ";
       break;
     case AV_CODEC_ID_TRUEHD:
-      strInfo = "TrueHD ";
+      if (profile == FF_PROFILE_TRUEHD_ATMOS)
+        strInfo = "TrueHD ATMOS ";
+      else
+        strInfo = "TrueHD ";
       break;
     case AV_CODEC_ID_AAC:
     {
