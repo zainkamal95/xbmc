@@ -35,6 +35,7 @@ public:
   void UpdateResolutions() override;
   bool IsHDRDisplay() override;
   CHDRCapabilities GetDisplayHDRCapabilities() const override;
+  float GetDisplayLatency() override;
   float GetGuiSdrPeakLuminance() const override;
 
   bool Hide() override;
