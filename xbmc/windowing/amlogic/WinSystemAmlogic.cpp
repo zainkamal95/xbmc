@@ -304,6 +304,11 @@ CHDRCapabilities CWinSystemAmlogic::GetDisplayHDRCapabilities() const
   return m_hdr_caps;
 }
 
+float CWinSystemAmlogic::GetDisplayLatency()
+{
+  return 0.0f; 
+}
+
 float CWinSystemAmlogic::GetGuiSdrPeakLuminance() const
 {
   const auto settings = CServiceBroker::GetSettingsComponent()->GetSettings();
