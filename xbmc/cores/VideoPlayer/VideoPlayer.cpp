@@ -3318,14 +3318,69 @@ bool CVideoPlayer::SeekScene(bool bPlus)
 
 void CVideoPlayer::GetGeneralInfo(std::string& strGeneralInfo)
 {
-  if (!m_bStop)
-  {
-    double apts = m_VideoPlayerAudio->GetCurrentPts();
-    double vpts = m_VideoPlayerVideo->GetCurrentPts();
-    double dDiff = 0;
+  // Moving Average variables.
+  static const int BUFFER_SIZE = 128;
+  static int index = 0;
+  static bool bufferFilled = false;
+  static bool resetDone = false;
 
-    if (apts != DVD_NOPTS_VALUE && vpts != DVD_NOPTS_VALUE)
-      dDiff = (apts - vpts) / DVD_TIME_BASE;
+  static double bufferDelta[BUFFER_SIZE] = {0};
+  static double bufferAudio[BUFFER_SIZE] = {0};
+  static double bufferAAudio[BUFFER_SIZE] = {0};
+  static double bufferVideo[BUFFER_SIZE] = {0};
+
+  static double sumDelta = 0;
+  static double sumAudio = 0;
+  static double sumAAudio = 0;
+  static double sumVideo = 0;
+
+  if (!m_bStop && (m_playSpeed == DVD_PLAYSPEED_NORMAL))
+  {
+    resetDone = false;
+
+    double clock = m_clock.GetClock();
+    double apts = m_VideoPlayerAudio->GetCurrentPts();
+    double aapts = m_VideoPlayerAudio->GetCurrentAPts();
+    double vpts = m_VideoPlayerVideo->GetCurrentPts();
+
+    bool have_apts = (apts != DVD_NOPTS_VALUE);
+    bool have_aapts = (aapts != DVD_NOPTS_VALUE);
+    bool have_vpts = (vpts != DVD_NOPTS_VALUE);
+
+    double dDiff = (have_apts && have_vpts) ? (apts - vpts) / DVD_TIME_BASE : 0;
+    double dDiffAudio = (have_apts) ? (apts - clock) / DVD_TIME_BASE : 0;
+    double dDiffAAudio = (have_aapts) ? (aapts - clock) / DVD_TIME_BASE : 0;
+    double dDiffVideo = (have_vpts) ? (vpts - clock) / DVD_TIME_BASE : 0;
+
+    // Moving Average Delta of Audio and Video
+    sumDelta -= bufferDelta[index];  // subtract "oldest" value from sum
+    sumDelta += dDiff;               // add new value to sum
+    bufferDelta[index] = dDiff;      // store new value at the index of "oldest"
+
+    // Moving Average Delta of Audio and Clock
+    sumAudio -= bufferAudio[index];  // subtract "oldest" value from sum
+    sumAudio += dDiffAudio;          // add new value to sum
+    bufferAudio[index] = dDiffAudio; // store new value at the index of "oldest"
+
+    // Moving Average Delta of Audio and Clock
+    sumAAudio -= bufferAAudio[index];  // subtract "oldest" value from sum
+    sumAAudio += dDiffAAudio;          // add new value to sum
+    bufferAAudio[index] = dDiffAAudio; // store new value at the index of "oldest"
+
+    // Moving Average Delta of Video and Clock
+    sumVideo -= bufferVideo[index];  // subtract "oldest" value from sum
+    sumVideo += dDiffVideo;          // add new value to sum
+    bufferVideo[index] = dDiffVideo; // store new value at the index of "oldest" 
+
+    index = (index + 1) % BUFFER_SIZE;            // next slot in ring buffers, wraps back to 0 for last index entry @ 127
+    bufferFilled = bufferFilled || (index == 0);  // buffer already filled or index wrapped i.e. all buffer slots now have a value so filled
+    int filled = bufferFilled ? BUFFER_SIZE : index;
+
+    // calc moving average from sum and how many entries in buffer
+    double dDiffMovingAverage = sumDelta / filled;
+    double dDiffAudioMovingAverage = sumAudio / filled;
+    double dDiffAAudioMovingAverage = sumAAudio / filled;
+    double dDiffVideoMovingAverage = sumVideo / filled;
 
     std::string strBuf;
     std::unique_lock<CCriticalSection> lock(m_StateSection);
@@ -3337,7 +3392,26 @@ void CVideoPlayer::GetGeneralInfo(std::string& strGeneralInfo)
                                     m_State.cache_offset * 100.0);
     }
 
-    strGeneralInfo = StringUtils::Format("Player: a/v:{: 6.3f}, {}", dDiff, strBuf);
+    strGeneralInfo = StringUtils::Format("Player: a/v:{: 6.3f} a/v~:{: 6.3f}, a/c~:{: 6.3f}, aa/c~:{: 6.3f}, v/c~:{: 6.3f}, {}",
+        dDiff, dDiffMovingAverage, dDiffAudioMovingAverage, dDiffAAudioMovingAverage, dDiffVideoMovingAverage, strBuf);
+  }
+  else if (!resetDone)
+  {
+    // Reset the Moving Average variables.
+    index = 0;
+    bufferFilled = false;
+
+    memset(bufferDelta, 0, sizeof(bufferDelta));
+    memset(bufferAudio, 0, sizeof(bufferAudio));
+    memset(bufferAAudio, 0, sizeof(bufferAAudio));
+    memset(bufferVideo, 0, sizeof(bufferVideo));
+
+    sumDelta = 0;
+    sumAudio = 0;
+    sumAAudio = 0;
+    sumVideo = 0;
+
+    resetDone = true;
   }
 }
 
