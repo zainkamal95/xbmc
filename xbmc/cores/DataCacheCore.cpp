@@ -587,6 +587,20 @@ int CDataCacheCore::GetAudioQueueDataLevel()
   return m_playerAudioInfo.queueDataLevel;
 }
 
+void CDataCacheCore::SetAudioLatency(double latency)
+{
+  std::unique_lock<CCriticalSection> lock(m_audioPlayerSection);
+
+  m_playerAudioInfo.latency = latency;
+}
+
+double CDataCacheCore::GetAudioLatency()
+{
+  std::unique_lock<CCriticalSection> lock(m_audioPlayerSection);
+
+  return m_playerAudioInfo.latency;
+}
+
 void CDataCacheCore::SetEditList(const std::vector<EDL::Edit>& editList)
 {
   std::unique_lock<CCriticalSection> lock(m_contentSection);
