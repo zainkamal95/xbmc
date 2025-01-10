@@ -65,6 +65,7 @@
 #include "video/VideoInfoTag.h"
 #include "windowing/WinSystem.h"
 
+#include <cmath>
 #include <iterator>
 #include <memory>
 #include <mutex>
@@ -3318,6 +3319,9 @@ bool CVideoPlayer::SeekScene(bool bPlus)
 
 void CVideoPlayer::GetGeneralInfo(std::string& strGeneralInfo)
 {
+  static const double POS_10_MILLI_SEC_TS = 0.10 * DVD_TIME_BASE;
+  static const double NEG_10_MILLI_SEC_TS = POS_10_MILLI_SEC_TS * -1;
+  
   // Moving Average variables.
   static const int BUFFER_SIZE = 128;
   static int index = 0;
@@ -3382,6 +3386,10 @@ void CVideoPlayer::GetGeneralInfo(std::string& strGeneralInfo)
     double dDiffAAudioMovingAverage = sumAAudio / filled;
     double dDiffVideoMovingAverage = sumVideo / filled;
 
+    // Signal Audio latency - to adjust video 10ms adjutments if off by more than 10ms.
+    if (std::abs(dDiffAudioMovingAverage) > POS_10_MILLI_SEC_TS) 
+      CServiceBroker::GetDataCacheCore().SetAudioLatency(std::signbit(dDiffAudioMovingAverage) ? NEG_10_MILLI_SEC_TS : POS_10_MILLI_SEC_TS)
+  
     std::string strBuf;
     std::unique_lock<CCriticalSection> lock(m_StateSection);
     if (m_State.cache_bytes >= 0)
