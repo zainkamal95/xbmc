@@ -3388,7 +3388,7 @@ void CVideoPlayer::GetGeneralInfo(std::string& strGeneralInfo)
 
     // Signal Audio latency - to adjust video 10ms adjutments if off by more than 10ms.
     if (std::abs(dDiffAudioMovingAverage) > POS_10_MILLI_SEC_TS) 
-      CServiceBroker::GetDataCacheCore().SetAudioLatency(std::signbit(dDiffAudioMovingAverage) ? NEG_10_MILLI_SEC_TS : POS_10_MILLI_SEC_TS)
+      CServiceBroker::GetDataCacheCore().SetAudioLatency(std::signbit(dDiffAudioMovingAverage) ? NEG_10_MILLI_SEC_TS : POS_10_MILLI_SEC_TS);
   
     std::string strBuf;
     std::unique_lock<CCriticalSection> lock(m_StateSection);
