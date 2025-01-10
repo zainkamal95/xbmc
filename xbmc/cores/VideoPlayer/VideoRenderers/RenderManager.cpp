@@ -1195,11 +1195,14 @@ void CRenderManager::PrepareNextRender()
                      static_cast<double>(CServiceBroker::GetWinSystem()->GetGfxContext().GetFPS()) *
                      DVD_TIME_BASE;
 
+  double audioLatency = CServiceBroker::GetDataCacheCore().GetAudioLatency();
+  
   m_displayLatency = DVD_MSEC_TO_TIME(
       m_latencyTweak +
       static_cast<double>(CServiceBroker::GetWinSystem()->GetGfxContext().GetDisplayLatency()) -
       m_videoDelay -
-      static_cast<double>(CServiceBroker::GetWinSystem()->GetFrameLatencyAdjustment()));
+      static_cast<double>(CServiceBroker::GetWinSystem()->GetFrameLatencyAdjustment()) + 
+      audioLatency);
 
   double frameOnScreen = m_dvdClock.GetClock();
   double renderPts = frameOnScreen + m_displayLatency;
