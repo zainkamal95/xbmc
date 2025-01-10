@@ -122,6 +122,8 @@ public:
   int GetAudioQueueLevel();
   void SetAudioQueueDataLevel(int level);
   int GetAudioQueueDataLevel();
+  void SetAudioLatency(double latency);
+  double GetAudioLatency();
 
   // content info
 
@@ -303,6 +305,7 @@ protected:
     double liveBitRate = 0;
     int queueLevel = 0;
     int queueDataLevel = 0;
+    double latency = 0;
   } m_playerAudioInfo;
 
   mutable CCriticalSection m_contentSection;
