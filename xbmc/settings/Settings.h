@@ -153,6 +153,7 @@ public:
   static constexpr auto SETTING_LOCALE_SUBTITLELANGUAGE = "locale.subtitlelanguage";
   static constexpr auto SETTING_SUBTITLES_PARSECAPTIONS = "subtitles.parsecaptions";
   static constexpr auto SETTING_SUBTITLES_CAPTIONSALIGN = "subtitles.captionsalign";
+  static constexpr auto SETTING_SUBTITLES_CAPTIONSIMPAIRED = "subtitles.captionsimpaired";
   static constexpr auto SETTING_SUBTITLES_ALIGN = "subtitles.align";
   static constexpr auto SETTING_SUBTITLES_STEREOSCOPICDEPTH = "subtitles.stereoscopicdepth";
   static constexpr auto SETTING_SUBTITLES_FONTNAME = "subtitles.fontname";
@@ -375,7 +376,6 @@ public:
   static constexpr auto SETTING_VIDEOSCREEN_STEREOSCOPICMODE = "videoscreen.stereoscopicmode";
   static constexpr auto SETTING_VIDEOSCREEN_PREFEREDSTEREOSCOPICMODE =
       "videoscreen.preferedstereoscopicmode";
-  static constexpr auto SETTING_VIDEOSCREEN_NOOFBUFFERS = "videoscreen.noofbuffers";
   static constexpr auto SETTING_VIDEOSCREEN_3DLUT = "videoscreen.cms3dlut";
   static constexpr auto SETTING_VIDEOSCREEN_DISPLAYPROFILE = "videoscreen.displayprofile";
   static constexpr auto SETTING_VIDEOSCREEN_GUICALIBRATION = "videoscreen.guicalibration";

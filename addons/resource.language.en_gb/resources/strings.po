@@ -6185,7 +6185,25 @@ msgctxt "#12395"
 msgid "Linux version"
 msgstr ""
 
-#empty strings from id 12396 to 12599
+#. Label of button in the System Info screen asking for donations. "Thank you!" is used to convey gratitude to the users of our beloved software.
+#: addons/skin.estuary/xml/SettingsSystemInfo.xml
+msgctxt "#12396"
+msgid "Thank you!"
+msgstr ""
+
+#. Label of text box asking for donations
+#: addons/skin.estuary/xml/SettingsSystemInfo.xml
+msgctxt "#12397"
+msgid "Kodi is brought to you with love from the Kodi Foundation, a 501(c)(3) nonprofit organization. Thank you for using our software!"
+msgstr ""
+
+#. URL for donations. Do not translate.
+#: addons/skin.estuary/xml/SettingsSystemInfo.xml
+msgctxt "#12398"
+msgid "kodi.tv/donate"
+msgstr ""
+
+#empty strings from id 12399 to 12599
 
 #: xbmc/guilib/WindowIDs.h
 msgctxt "#12600"
@@ -21991,7 +22009,7 @@ msgstr ""
 #. Description of setting with label #36628 "Minimum protocol version"
 #: system/settings/settings.xml
 msgctxt "#36629"
-msgid "Set the minimum SMB protocol version to negotiate when making connections. Forcing SMBv2 may be required to prevent SMBv1 use on some OS."
+msgid "Set the minimum SMB protocol version to negotiate when making connections. Forcing SMBv2 may be required to prevent SMBv1 use on some systems. Only SMBv2.1 and SMBv3 support Large MTU (chunk size > 64 KB)."
 msgstr ""
 
 #. Label of a setting, sets additional config required for some proprietary SMBv1 implementations (mostly routers)
@@ -22036,7 +22054,11 @@ msgctxt "#36636"
 msgid "You must first enter a password before web server authentication can be enabled."
 msgstr ""
 
-#empty string with id 36637
+#. Values for setting with label #36621 and #36628 "Minimum/Maximum protocol version"
+#: system/settings/settings.xml
+msgctxt "#36637"
+msgid "SMBv2.1"
+msgstr ""
 
 #. Menuitem at "Settings -> System -> Add-ons"
 #: ./system/settings/settings.xml
@@ -24031,6 +24053,22 @@ msgstr ""
 msgctxt "#39201"
 msgid "HDR10+"
 msgstr ""
+
+#empty strings from id 39202 to 39203
+
+#. Setting to make CC subtitles for hearing impaired only
+#: system/settings/settings.xml
+msgctxt "#39204"
+msgid "Set CC subtitles only for the hearing impaired"
+msgstr ""
+
+#. Help text for setting of label #39204
+#: system/settings/settings.xml
+msgctxt "#39205"
+msgid "By enabling it, CC subtitles will be labeled for the hearing impaired; this will affect the automatic selection of subtitles, which unless otherwise specified will not be displayed by default."
+msgstr ""
+
+#empty strings from id 39205 to 39300
 
 #. Dolby Vision RPU Conversion
 #: system/settings/settings.xml
