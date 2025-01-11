@@ -669,7 +669,7 @@ namespace VIDEO
 
         if (fetchEpisodes)
         {
-          INFO_RET ret = RetrieveInfoForEpisodes(pItem, lResult, info2, useLocal, pDlgProgress);
+          INFO_RET ret = RetrieveInfoForEpisodes(pItem, lResult, info2, useLocal, pDlgProgress, true);
           if (ret == INFO_ADDED)
           {
             m_database.SetPathHash(pItem->GetPath(), pItem->GetProperty("hash").asString());
@@ -700,7 +700,7 @@ namespace VIDEO
     }
     if (fetchEpisodes)
     {
-      INFO_RET ret = RetrieveInfoForEpisodes(pItem, lResult, info2, useLocal, pDlgProgress);
+      INFO_RET ret = RetrieveInfoForEpisodes(pItem, lResult, info2, useLocal, pDlgProgress, true);
       if (ret == INFO_ADDED)
         m_database.SetPathHash(pItem->GetPath(), pItem->GetProperty("hash").asString());
     }
@@ -899,7 +899,8 @@ namespace VIDEO
                                              long showID,
                                              const ADDON::ScraperPtr &scraper,
                                              bool useLocal,
-                                             CGUIDialogProgress *progress)
+                                             CGUIDialogProgress *progress,
+                                             bool alreadyHasArt /* = false */)
   {
     // enumerate episodes
     EPISODELIST files;
@@ -920,19 +921,22 @@ namespace VIDEO
       std::map<int, std::map<std::string, std::string>> seasonArt;
       m_database.GetTvShowSeasonArt(showID, seasonArt);
 
-      bool updateSeasonArt = false;
-      for (std::map<int, std::map<std::string, std::string>>::const_iterator i = seasonArt.begin(); i != seasonArt.end(); ++i)
+      bool updateSeasonArt{alreadyHasArt};
+      if (!alreadyHasArt)
       {
-        if (i->second.empty())
+        for (const auto& i : seasonArt)
         {
-          updateSeasonArt = true;
-          break;
+          if (i.second.empty())
+          {
+            updateSeasonArt = true;
+            break;
+          }
         }
       }
 
       if (updateSeasonArt)
       {
-        if (!item->IsPlugin() || scraper->ID() != "metadata.local")
+        if (!alreadyHasArt && !item->IsPlugin() && scraper->ID() != "metadata.local")
         {
           CVideoInfoDownloader loader(scraper);
           loader.GetArtwork(showInfo);
