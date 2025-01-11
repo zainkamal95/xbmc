@@ -439,6 +439,8 @@ void CSettings::InitializeOptionFillers()
   GetSettingsManager()->RegisterSettingOptionsFiller(
       "keyboardlayouts", KEYBOARD::CKeyboardLayoutManager::SettingOptionsKeyboardLayoutsFiller);
   GetSettingsManager()->RegisterSettingOptionsFiller(
+      "smbversions", CServicesSettings::SettingOptionsSmbVersionsFiller);
+  GetSettingsManager()->RegisterSettingOptionsFiller(
       "filechunksizes", CServicesSettings::SettingOptionsChunkSizesFiller);
   GetSettingsManager()->RegisterSettingOptionsFiller(
       "filecachebuffermodes", CServicesSettings::SettingOptionsBufferModesFiller);
@@ -494,6 +496,7 @@ void CSettings::UninitializeOptionFillers()
 #endif // defined(TARGET_LINUX)
   GetSettingsManager()->UnregisterSettingOptionsFiller("verticalsyncs");
   GetSettingsManager()->UnregisterSettingOptionsFiller("keyboardlayouts");
+  GetSettingsManager()->UnregisterSettingOptionsFiller("smbversions");
   GetSettingsManager()->UnregisterSettingOptionsFiller("filechunksizes");
   GetSettingsManager()->UnregisterSettingOptionsFiller("filecachebuffermodes");
   GetSettingsManager()->UnregisterSettingOptionsFiller("filecachememorysizes");
