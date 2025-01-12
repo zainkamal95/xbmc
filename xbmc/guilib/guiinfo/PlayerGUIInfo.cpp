@@ -254,15 +254,6 @@ std::string VS10ModeToString(unsigned int vs10Mode) {
   return "";
 }
 
-std::string DtsXTypeToString(DtsXType dtsXType) {
-  switch (dtsXType) {
-    case DtsXType::DTS_X: return "DTS:X";
-    case DtsXType::DTS_X_IMAX_ENHANCED: return "IMAX";
-    case DtsXType::DTS_X_NONE: return "";
-  }
-  return "";
-}
-
 std::string uint8_to_padded_string(uint8_t value) {
   std::stringstream ss;
   ss << std::setw(2) << std::setfill('0') << static_cast<int>(value);
@@ -520,12 +511,6 @@ bool CPlayerGUIInfo::GetLabel(std::string& value, const CFileItem *item, int con
       value = StringUtils::FormatNumber(CServiceBroker::GetDataCacheCore().GetAudioBitsPerSample());
       return true;
 
-    case PLAYER_PROCESS_AUDIO_IS_DOLBY_ATMOS:
-      value = CServiceBroker::GetDataCacheCore().GetAudioIsDolbyAtmos() ? "Atmos" : "";
-      return true;
-    case PLAYER_PROCESS_AUDIO_DTS_X_TYPE:
-      value = DtsXTypeToString(CServiceBroker::GetDataCacheCore().GetAudioDtsXType());
-      return true;
     case PLAYER_PROCESS_AUDIO_LIVE_BIT_RATE:
       value = std::to_string(CServiceBroker::GetDataCacheCore().GetAudioLiveBitRate());
       return true;
