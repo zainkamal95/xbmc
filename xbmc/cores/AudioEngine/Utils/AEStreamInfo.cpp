@@ -33,10 +33,6 @@
 #define DTS_SYNC_EXT_LBR    0x0a801921  // DTS Extention Low Bit Rate
 #define DTS_SYNC_EXT_XLL    0x41a29547  // DTS Extention Lossless conding entention as used for DTS-HD Master Audio
 
-#define DTS_SYNC_X_1        0x02000850  // DTS:X Sync Word as found in Extention (1 of 2 possible)
-#define DTS_SYNC_X_2        0xF14000D1  // DTS:X Sync Word as found in Extention (2 of 2 possible)
-#define DTS_SYNC_IMAX       0xF14000D0  // IMAX Enhanced Sync Word as found in Extention (Built on DTS:X tech - but new branding)
-
 #define DTS_SFREQ_COUNT 16
 #define MAX_EAC3_BLOCKS 6
 #define UNKNOWN_DTS_EXTENSION 255
@@ -112,7 +108,7 @@ void CAEStreamParser::Reset()
   m_skipBytes = 0;
   m_bufferSize = 0;
   m_needBytes = 0;
-  m_eac3DolbyAtmosCheckCount = 0;
+
   m_hasSync = false;
 }
 
@@ -309,129 +305,6 @@ unsigned int CAEStreamParser::DetectType(uint8_t* data, unsigned int size)
   return possible ? possible : skipped;
 }
 
-bool hasAtmos(const uint8_t* buffer, unsigned int size) {
-  
-  size_t bitIndex = 0; 
-  
-  auto readBits = [&](uint32_t numBits) -> uint32_t {
-    uint32_t result = 0;
-    for (uint32_t i = 0; i < numBits; ++i) {
-      if (bitIndex / 8 >= size) return 0; // Buffer overrun protection
-      result = (result << 1) | ((static_cast<uint8_t>(buffer[bitIndex / 8]) >> (7 - (bitIndex % 8))) & 1);
-      ++bitIndex;
-    }
-    return result;
-  };
-
-  auto skipBits = [&](uint32_t numBits) {
-    bitIndex += numBits;
-  };
-
-  auto alignToNextByte = [&]() {
-    if (bitIndex % 8 != 0) {
-        uint32_t nextBytePosition = ((bitIndex + 7) & ~7);
-        if ((nextBytePosition / 8) >= size) {
-            bitIndex = size * 8;  // Set to end of buffer
-        } else {
-            bitIndex = nextBytePosition;
-        }
-    }
-  };
-
-  // look for an EAC3 (AC3) sync word
-  if (buffer[0] != 0x0b || buffer[1] != 0x77)
-    return false;
-
-  // check the bsid is EAC3
-  uint32_t bsid = (buffer[5] & 0xF8) >> 3;
-  if (bsid != 16) return false;
-
-  skipBits(16); // Skip the sync word 2 bytes
-
-  uint32_t frameType = readBits(2);     // strmType  
-  uint32_t subStreamId = readBits(3);
-  uint32_t frameSize = (readBits(11) + 1) << 1;   // number of 16bit words (-1) of data in the frame, Multiply by 2 for bytes)
-  skipBits(4); //srCode / numBlocks
-  
-  uint32_t channelMode = readBits(3);
-  
-  skipBits(11);  // Skip lfeOn, bsid, dialogue normalization extention
-
-  if (readBits(1)) skipBits(8);
-  if (channelMode == 0) // 1+1
-  {
-    skipBits(5);
-    if (readBits(1)) skipBits(8);
-  }
-  // Align to byte.
-  alignToNextByte();
-
-  // Search for EMDF sync
-  bool emdfFound = false;
-  while (bitIndex / 8 < frameSize - 2) {
-
-    if ((bitIndex / 8 + 1) >= frameSize) break;  // Check for second byte
-    
-    uint8_t byte1 = buffer[bitIndex / 8];
-    uint8_t byte2 = buffer[bitIndex / 8 + 1];
-    
-    if (byte1 == 0x58 && byte2 == 0x38) {
-        emdfFound = true;
-        bitIndex += 16;  // Move past the sync word
-        break;
-    }
-    bitIndex += 8;
-  }
-
-  if (!emdfFound) return false;
-
-  uint32_t emdfSize = readBits(16); // emdf_container_length in bytes.
-  uint32_t end_size = (bitIndex / 8) + emdfSize;
-
-  if (end_size > size) return false;
-
-  uint32_t emdfVersion = readBits(2);
-  if (emdfVersion == 3) emdfVersion += readBits(2);
-  if (emdfVersion > 0) return false;
-
-  // key id + key addition if 7
-  if (readBits(3) == 7) skipBits(2);
-
-  while ((bitIndex / 8) < end_size)
-  {
-    uint32_t emdfPayloadID = readBits(5); 
-
-    if (emdfPayloadID == 11) return true; // OAMD - object audio metadata payload
-    if (emdfPayloadID == 14) return true; // JOC - joint object coding payload - (did not see this case.)
-
-    uint32_t sampleOffsetE = readBits(1);
-    if (sampleOffsetE) skipBits(12);
-    if (readBits(1)) skipBits(11); // duration
-    if (readBits(1)) skipBits(2);  // group id
-    if (readBits(1)) skipBits(8);  // codec specific data - reserved
-
-    if (!readBits(1)) //discard_unknown_payload
-    {
-      uint32_t payload_frame_aligned = 0;
-      if (!sampleOffsetE)
-      {
-        payload_frame_aligned = readBits(1);  
-        if (payload_frame_aligned)
-          skipBits(2); // create_duplicate - remove_duplicate
-      }
-
-      if (sampleOffsetE || payload_frame_aligned)
-        skipBits(7); // priority - proc_allowed
-    }
-    
-    uint32_t emdfPayloadSize = readBits(8) * 8;
-    skipBits(emdfPayloadSize);
-  }
-
-  return false;
-}
-
-
 bool CAEStreamParser::TrySyncAC3(uint8_t* data,
                                  unsigned int size,
                                  bool resyncing,
@@ -604,14 +477,6 @@ bool CAEStreamParser::TrySyncAC3(uint8_t* data,
       }
     }
 
-    // Check for Atmos
-    if (!m_info.m_isDolbyAtmos && m_eac3DolbyAtmosCheckCount < 17) {
-      m_eac3DolbyAtmosCheckCount++;
-      m_info.m_isDolbyAtmos = hasAtmos(data, size);
-      if (m_info.m_isDolbyAtmos)
-        CLog::Log(LOGINFO, "CAEStreamParser::TrySyncAC3 - E-AC3 Atmos detected after [{}] frames", m_eac3DolbyAtmosCheckCount);
-    }
-
     if (m_info.m_type == CAEStreamInfo::STREAM_TYPE_EAC3 && m_hasSync && !resyncing)
       return true;
 
@@ -644,30 +509,7 @@ unsigned int CAEStreamParser::SyncAC3(uint8_t* data, unsigned int size)
   // if we get here, the entire packet is invalid and we have lost sync
   CLog::Log(LOGINFO, "CAEStreamParser::SyncAC3 - AC3 sync lost");
   m_hasSync = false;
-  m_eac3DolbyAtmosCheckCount = 0;
   return skip;
-}
-
-DtsXType checkDtsXType(const uint8_t* data, unsigned int size, unsigned int position)
-{
-  if (size < position + 4) return DtsXType::DTS_X_NONE;
-
-  for (unsigned int j = position; j <= size - 4; j++)
-  {
-    uint32_t dtsSyncWord = (data[j]   << 24)
-                         | (data[j+1] << 16)
-                         | (data[j+2] << 8)
-                         |  data[j+3];
-
-    switch (dtsSyncWord)
-    {
-      case DTS_SYNC_X_1:  return DtsXType::DTS_X;
-      case DTS_SYNC_X_2:  return DtsXType::DTS_X;
-      case DTS_SYNC_IMAX: return DtsXType::DTS_X_IMAX_ENHANCED;
-    }
-  }
-
-  return DtsXType::DTS_X_NONE;
 }
 
 unsigned int CAEStreamParser::SyncDTS(uint8_t* data, unsigned int size)
@@ -892,7 +734,6 @@ unsigned int CAEStreamParser::SyncDTS(uint8_t* data, unsigned int size)
       }
 
       m_info.m_bitDepth = (hd_bits > 0) ? hd_bits : bits;
-      m_info.m_dtsXType = checkDtsXType(data, size, m_coreSize + nHeaderSize);
 
       if (dataType == CAEStreamInfo::STREAM_TYPE_DTSHD_MA)
       {
@@ -947,9 +788,9 @@ unsigned int CAEStreamParser::SyncDTS(uint8_t* data, unsigned int size)
 
       CLog::Log(LOGINFO,
                 "CAEStreamParser::SyncDTS - {} stream detected ({} channels, {}Hz, {}bit {}, "
-                "period: {}, core syncword: 0x{:x}, ext syncword: 0x{:x}, ext sub syncword: 0x{:x}, target rate: 0x{:x}, framesize {} dts:x {}))",
+                "period: {}, core syncword: 0x{:x}, ext syncword: 0x{:x}, ext sub syncword: 0x{:x}, target rate: 0x{:x}, framesize {}))",
                 type, m_info.m_channels, m_info.m_sampleRate, m_info.m_bitDepth, m_info.m_dataIsLE ? "LE" : "BE",
-                m_info.m_dtsPeriod, header, ext_sync, ext_sub_sync, target_rate, m_fsize, m_info.m_dtsXType);
+                m_info.m_dtsPeriod, header, ext_sync, ext_sub_sync, target_rate, m_fsize);
     }
 
     return skip;
@@ -1037,11 +878,8 @@ unsigned int CAEStreamParser::SyncTrueHD(uint8_t* data, unsigned int size)
           channel_map = (data[9] << 1) | (data[10] >> 7);
         m_info.m_channels = CAEStreamParser::GetTrueHDChannels(channel_map);
 
-        // check for Atmos
-        m_info.m_isDolbyAtmos = ((m_substreams == 4) && ((data[20] & 0x0F) != 0));
-
-        CLog::Log(LOGINFO, "CAEStreamParser::SyncTrueHD - TrueHD stream detected ({} channels{}, {}Hz, {}-bit)",
-                  m_info.m_channels, m_info.m_isDolbyAtmos ? " + Atmos" : "", m_info.m_sampleRate, m_info.m_bitDepth);
+        CLog::Log(LOGINFO, "CAEStreamParser::SyncTrueHD - TrueHD stream detected channels{}, {}Hz, {}-bit)",
+                  m_info.m_channels, m_info.m_sampleRate, m_info.m_bitDepth);
 
         m_hasSync = true;
         m_info.m_type = CAEStreamInfo::STREAM_TYPE_TRUEHD;

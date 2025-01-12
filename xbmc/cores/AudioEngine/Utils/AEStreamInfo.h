@@ -19,12 +19,6 @@ extern "C" {
 #include <libavutil/crc.h>
 }
 
-enum DtsXType
-{
-  DTS_X_NONE,
-  DTS_X,
-  DTS_X_IMAX_ENHANCED
-};
 class CAEStreamInfo
 {
 public:
@@ -49,8 +43,6 @@ public:
   unsigned int m_sampleRate = 0;
   unsigned int m_bitDepth = 0;
   unsigned int m_channels = 0;
-  bool m_isDolbyAtmos = false;
-  DtsXType m_dtsXType = DtsXType::DTS_X_NONE;
   bool m_dataIsLE = true;
   unsigned int m_dtsPeriod = 0;
   unsigned int m_repeat = 0;
@@ -98,7 +90,6 @@ private:
   unsigned int m_fsize = 0;
   int m_substreams = 0;       /* used for TrueHD  */
   AVCRC m_crcTrueHD[1024];  /* TrueHD crc table */
-  unsigned int m_eac3DolbyAtmosCheckCount = 0; // Dolby EAC3 - Check for Atmos Count.
 
   void GetPacket(uint8_t **buffer, unsigned int *bufferSize);
   unsigned int DetectType(uint8_t *data, unsigned int size);
