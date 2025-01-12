@@ -112,10 +112,6 @@ public:
   int GetAudioBitsPerSample();
 
   // Additional Player Process Info data (Only set in Data Core Cache)
-  void SetAudioIsDolbyAtmos(bool isDolbyAtmos);
-  bool GetAudioIsDolbyAtmos();
-  void SetAudioDtsXType(DtsXType dtsXType);
-  DtsXType GetAudioDtsXType();
   void SetAudioLiveBitRate(double bitRate);
   double GetAudioLiveBitRate();
   void SetAudioQueueLevel(int level);
@@ -298,8 +294,6 @@ protected:
     std::string channels;
     int sampleRate;
     int bitsPerSample;
-    bool isDolbyAtmos = false;
-    DtsXType dtsXType = DtsXType::DTS_X_NONE;
     double liveBitRate = 0;
     int queueLevel = 0;
     int queueDataLevel = 0;
