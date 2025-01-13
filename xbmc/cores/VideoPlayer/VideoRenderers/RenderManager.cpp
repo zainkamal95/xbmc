@@ -91,16 +91,8 @@ bool CRenderManager::Configure(const VideoPicture& picture, float fps, unsigned 
     if (!m_bRenderGUI)
       return true;
 
-    if (m_width == picture.iWidth &&
-        m_height == picture.iHeight &&
-        m_dwidth == picture.iDisplayWidth &&
-        m_dheight == picture.iDisplayHeight &&
-        m_fps == fps &&
-        m_orientation == orientation &&
-        m_hdrType == hdrType &&
-        m_stereomode == picture.stereoMode &&
-        m_NumberBuffers == buffers &&
-        m_pRenderer != nullptr &&
+    if (m_picture.IsSameParams(picture) && m_fps == fps && m_orientation == orientation &&
+        m_NumberBuffers == buffers && m_pRenderer != nullptr &&
         !m_pRenderer->ConfigChanged(picture))
     {
       return true;
@@ -135,8 +127,6 @@ bool CRenderManager::Configure(const VideoPicture& picture, float fps, unsigned 
     m_picture.SetParams(picture);
     m_fps = fps;
     m_orientation = orientation;
-    m_hdrType = hdrType;
-    m_stereomode = picture.stereoMode;
     m_NumberBuffers  = buffers;
     m_renderState = STATE_CONFIGURING;
     m_stateEvent.Reset();
@@ -405,8 +395,7 @@ void CRenderManager::UnInit()
   m_renderState = STATE_UNCONFIGURED;
   m_picture.Reset();
   m_bRenderGUI = false;
-  m_hdrType = StreamHdrType::HDR_TYPE_NONE;
-  CServiceBroker::GetWinSystem()->GetGfxContext().SetHDRType(m_hdrType);
+  CServiceBroker::GetWinSystem()->GetGfxContext().SetHDRType(m_picture.hdrType);
   RemoveCaptures();
 
   m_initEvent.Set();
@@ -901,7 +890,7 @@ void CRenderManager::UpdateResolution()
         CServiceBroker::GetGUI()->GetStereoscopicsManager().GetStereoModeByUser();
       STEREOSCOPIC_PLAYBACK_MODE playbackMode =
         static_cast<STEREOSCOPIC_PLAYBACK_MODE>(CServiceBroker::GetSettingsComponent()->GetSettings()->GetInt(CSettings::SETTING_VIDEOPLAYER_STEREOSCOPICPLAYBACKMODE));
-      if (!m_stereomode.empty() &&
+      if (!m_picture.stereoMode.empty() &&
           playbackMode == STEREOSCOPIC_PLAYBACK_MODE_ASK &&
           user_stereo_mode == RENDER_STEREO_MODE_UNDEFINED)
         m_bTriggerUpdateResolution = false;
@@ -909,18 +898,18 @@ void CRenderManager::UpdateResolution()
           CServiceBroker::GetSettingsComponent()->GetSettings()->GetInt(CSettings::SETTING_VIDEOPLAYER_ADJUSTREFRESHRATE) != ADJUST_REFRESHRATE_OFF && m_fps > 0.0f)
       {
 
-        StreamHdrType actual_hdrType = (m_hdrType_override != StreamHdrType::HDR_TYPE_NONE) ? m_hdrType_override : m_hdrType;
+        StreamHdrType actual_hdrType = (m_hdrType_override != StreamHdrType::HDR_TYPE_NONE) ? m_hdrType_override : m_picture.hdrType;
 
         CLog::Log(LOGINFO, "CRenderManager::{} Before - Set fps [{}] width [{}] height [{}] stereomode empty [{}] hdr type [{}]",
-          __FUNCTION__, m_fps, m_width, m_height, m_stereomode.empty(), CStreamDetails::DynamicRangeToString(actual_hdrType));
+          __FUNCTION__, m_fps, m_picture.iWidth, m_picture.iHeight, m_picture.stereoMode.empty(), CStreamDetails::DynamicRangeToString(actual_hdrType));
   
-        RESOLUTION res = CResolutionUtils::ChooseBestResolution(m_fps, m_width, m_height, !m_stereomode.empty());
+        RESOLUTION res = CResolutionUtils::ChooseBestResolution(m_fps, m_picture.iWidth, m_picture.iHeight, !m_picture.stereoMode.empty());
         CServiceBroker::GetWinSystem()->GetGfxContext().SetHDRType(actual_hdrType);
         CServiceBroker::GetWinSystem()->GetGfxContext().SetVideoResolution(res, false);
         UpdateLatencyTweak();
 
         CLog::Log(LOGINFO, "CRenderManager::{} After - Set fps [{}] width [{}] height [{}] stereomode empty [{}] hdr type [{}]",
-          __FUNCTION__, m_fps, m_width, m_height, m_stereomode.empty(), CStreamDetails::DynamicRangeToString(actual_hdrType));
+          __FUNCTION__, m_fps, m_picture.iWidth, m_picture.iHeight, m_picture.stereoMode.empty(), CStreamDetails::DynamicRangeToString(actual_hdrType));
         
         if (m_pRenderer) 
           m_pRenderer->Update();
@@ -944,7 +933,7 @@ void CRenderManager::TriggerUpdateResolutionHdr(StreamHdrType hdrType)
 void CRenderManager::TriggerUpdateResolution(float fps, int width, int height, std::string &stereomode)
 {
   CLog::Log(LOGINFO, "CRenderManager::{} - fps [{}] width [{}] height [{}] stereomode empty [{}] current trigger [{}]", 
-    __FUNCTION__, fps, width, height, m_stereomode.empty(), m_bTriggerUpdateResolution);
+    __FUNCTION__, fps, width, height, m_picture.stereoMode.empty(), m_bTriggerUpdateResolution);
 
   if (width)
   {
