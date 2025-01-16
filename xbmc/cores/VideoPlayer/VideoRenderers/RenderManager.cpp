@@ -715,6 +715,8 @@ void CRenderManager::Render(bool clear, DWORD flags, DWORD alpha, bool gui)
       return;
   }
 
+  m_playerPort->UpdateGuiRender(IsGuiLayer());
+
   if (!gui && m_pRenderer->IsGuiLayer())
     return;
 
