@@ -13,7 +13,7 @@
 #if defined(TARGET_DARWIN_EMBEDDED)
 #define DEFAULT_BUFFERING 4
 #else
-#define DEFAULT_BUFFERING 3
+#define DEFAULT_BUFFERING 0
 #endif
 
 class CDirtyRegionTracker
