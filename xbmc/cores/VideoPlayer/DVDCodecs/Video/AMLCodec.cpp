@@ -1817,6 +1817,7 @@ CAMLCodec::CAMLCodec(CProcessInfo &processInfo, CDVDStreamInfo &hints)
   , m_speed(DVD_PLAYSPEED_NORMAL)
   , m_cur_pts(DVD_NOPTS_VALUE)
   , m_last_pts(DVD_NOPTS_VALUE)
+  , m_ptsOverflow(0)
   , m_bufferIndex(-1)
   , m_state(0)
   , m_hints(hints)
@@ -1924,6 +1925,8 @@ bool CAMLCodec::OpenDecoder()
   m_zoom = -1.0f;
   CDVDStreamInfo &hints = m_hints;  // Fudge to avoid large chnage delta renaming hints to m_hints.
   m_state = 0;
+  m_frameSizes.clear();
+  m_frameSizeSum = 0;
   m_hints.pClock = hints.pClock;
   m_tp_last_frame = std::chrono::system_clock::now();
   m_decoder_timeout = CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_videoDecoderTimeout;
@@ -2230,6 +2233,8 @@ bool CAMLCodec::OpenDecoder()
   // set video mute to hide waste frames
   //aml_video_mute(true);
 
+  m_ptsOverflow = 0;
+
   m_opened = true;
   // vcodec is open, update speed if it was
   // changed before VideoPlayer called OpenDecoder.
@@ -2368,6 +2373,10 @@ void CAMLCodec::Reset()
   m_cur_pts = DVD_NOPTS_VALUE;
   m_last_pts = DVD_NOPTS_VALUE;
   m_state = 0;
+  m_ptsOverflow = 0;
+  m_state = 0;
+  m_frameSizes.clear();
+  m_frameSizeSum = 0;
 
   SetSpeed(m_speed);
 
@@ -2459,6 +2468,21 @@ bool CAMLCodec::AddData(uint8_t *pData, size_t iSize, double dts, double pts)
       am_private->am_pkt.avpts = am_private->am_pkt.avdts;
   }
 
+  //Handle PTS overflow for arm
+  if (sizeof(long) < 8)
+  {
+    if (am_private->am_pkt.avpts != INT64_0)
+    {
+      m_ptsOverflow = am_private->am_pkt.avpts & 0xFFFFFFFF80000000ULL;
+      am_private->am_pkt.avpts &= 0x7FFFFFFF;
+    }
+    if (am_private->am_pkt.avdts != INT64_0)
+    {
+      m_ptsOverflow = am_private->am_pkt.avdts & 0xFFFFFFFF80000000ULL;
+      am_private->am_pkt.avdts &= 0x7FFFFFFF;
+    }
+  }
+
   // We use this to determine the fill state if no PTS is given
   if (m_cur_pts == DVD_NOPTS_VALUE)
   {
@@ -2505,6 +2529,8 @@ bool CAMLCodec::AddData(uint8_t *pData, size_t iSize, double dts, double pts)
       new_buffer_level,
       dts / DVD_TIME_BASE,
       pts / DVD_TIME_BASE
+      pts / DVD_TIME_BASE,
+      m_ptsOverflow
     );
   return true;
 }
@@ -2559,6 +2585,56 @@ float CAMLCodec::GetBufferLevel()
 {
   int new_chunk = 0, data_len, free_len;
   return GetBufferLevel(new_chunk, data_len, free_len);
+  v4l2_buffer vbuf = { 0 };
+  vbuf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+
+  //Driver change from 10 to 0ms latency, throttle here
+  std::chrono::time_point<std::chrono::system_clock> now(std::chrono::system_clock::now());
+
+  unsigned int waitTime(5);
+  bool timeout(false);
+DRAIN:
+  if (m_amlVideoFile->IOControl(VIDIOC_DQBUF, &vbuf) < 0)
+  {
+    if (errno != EAGAIN)
+      CLog::Log(LOGERROR, "CAMLCodec::DequeueBuffer - VIDIOC_DQBUF failed: {}", strerror(errno));
+
+    std::chrono::milliseconds elapsed(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - now).count());
+
+    if (elapsed < std::chrono::milliseconds(waitTime))
+      std::this_thread::sleep_for(std::chrono::milliseconds(waitTime) - elapsed);
+
+    timeout = elapsed >= std::chrono::milliseconds(300);
+
+    if (m_drain && !timeout)
+      goto DRAIN;
+
+    if (m_drain && timeout)
+      CLog::Log(LOGDEBUG, LOGAVTIMING, "CAMLCodec::DequeueBuffer timeout!");
+
+    return -errno;
+  }
+
+  if (m_drain)
+  {
+    int waited = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - now).count();
+    CLog::Log(LOGDEBUG, LOGAVTIMING, "CAMLCodec::DequeueBuffer waited:{:.3f}ms", waited / 1000.0);
+  }
+
+  m_last_pts = m_cur_pts;
+
+  m_cur_pts = m_ptsOverflow * 100 / 9 + (static_cast<int64_t>(vbuf.timestamp.tv_sec) << 32);
+  m_cur_pts += vbuf.timestamp.tv_usec & 0xFFFFFFFF;
+
+  // since ptsOverflow is calculated from decoder input, we have to check at output if the new packets caused overflow increment
+  if ((m_cur_pts - m_hints.pClock->GetClock())  > 0x7F000000LL * 100 / 9)
+    m_cur_pts -= 0x80000000LL * 100 / 9;
+
+  CLog::Log(LOGDEBUG, LOGAVTIMING, "CAMLCodec::DequeueBuffer: pts:{:.3f}  idx:{:d}",
+			static_cast<double>(m_cur_pts) /  DVD_TIME_BASE, vbuf.index);
+
+  m_bufferIndex = vbuf.index;
+  return 0;
 }
 
 float CAMLCodec::GetBufferLevel(int new_chunk, int &data_len, int &free_len)

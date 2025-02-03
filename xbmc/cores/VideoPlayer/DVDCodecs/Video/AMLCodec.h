@@ -110,6 +110,9 @@ private:
   int              m_speed;
   uint64_t         m_cur_pts;
   uint64_t         m_last_pts;
+  int64_t          m_cur_pts;
+  int64_t          m_last_pts;
+  int64_t          m_ptsOverflow;
   uint32_t         m_bufferIndex;
 
   CRect            m_dst_rect;
