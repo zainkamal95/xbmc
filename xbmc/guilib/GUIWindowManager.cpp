@@ -43,6 +43,7 @@
 #include "settings/windows/GUIWindowSettingsCategory.h"
 #include "settings/windows/GUIWindowSettingsScreenCalibration.h"
 #include "threads/SingleLock.h"
+#include "utils/AMLUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
 #include "utils/Variant.h"
@@ -583,6 +584,8 @@ bool CGUIWindowManager::SendMessage(CGUIMessage& message)
       if (window->OnMessage(message)) handled = true;
     }
   }
+
+  aml_dv_set_xbmc_osd();
   return handled;
 }
 
@@ -591,11 +594,14 @@ bool CGUIWindowManager::SendMessage(CGUIMessage& message, int window)
   if (window == 0)
     // send to no specified windows.
     return SendMessage(message);
+
+  bool handled = false;
   CGUIWindow* pWindow = GetWindow(window);
-  if(pWindow)
-    return pWindow->OnMessage(message);
-  else
-    return false;
+  if (pWindow)
+    handled = pWindow->OnMessage(message);
+
+  aml_dv_set_xbmc_osd();
+  return handled;
 }
 
 void CGUIWindowManager::AddUniqueInstance(CGUIWindow *window)

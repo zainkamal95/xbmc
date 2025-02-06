@@ -33,6 +33,10 @@
 #include "rendering/RenderSystem.h"
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
+#include "guilib/GUIDialog.h"
+#include "guilib/GUIComponent.h"
+#include "guilib/GUIWindowManager.h"
+#include "ServiceBroker.h"
 
 #include "platform/linux/SysfsPath.h"
 
@@ -642,6 +646,30 @@ void aml_dv_start()
 void aml_dv_set_subtitles(bool visible) 
 {
   CSysfsPath("/sys/module/amdolby_vision/parameters/dolby_vision_subtitles", visible ? 1 : 0);
+}
+
+void aml_dv_set_xbmc_osd()
+{
+  auto &wm = CServiceBroker::GetGUI()->GetWindowManager();
+
+  auto *osd = wm.GetDialog(WINDOW_DIALOG_VIDEO_OSD);
+  auto *ppi = wm.GetDialog(WINDOW_DIALOG_PLAYER_PROCESS_INFO);
+  auto *seekb = wm.GetDialog(WINDOW_DIALOG_SEEK_BAR);
+  auto *vidbo = wm.GetDialog(WINDOW_DIALOG_VIDEO_BOOKMARKS);
+  auto *volbar = wm.GetDialog(WINDOW_DIALOG_VOLUME_BAR);
+  auto *vidinf = wm.GetDialog(WINDOW_DIALOG_VIDEO_INFO);
+
+  bool osd_active(
+    osd->IsDialogRunning() ||
+    ppi->IsDialogRunning() ||
+    seekb->IsDialogRunning() ||
+    vidbo->IsDialogRunning() ||
+    volbar->IsDialogRunning() ||
+    vidinf->IsDialogRunning() ||
+    wm.GetActiveWindow() == WINDOW_HOME ||
+    wm.GetActiveWindow() != WINDOW_FULLSCREEN_VIDEO);
+
+  CSysfsPath("/sys/module/amdolby_vision/parameters/dolby_vision_xbmc_osd", osd_active ? 1 : 0);
 }
 
 enum DV_MODE aml_dv_mode()
