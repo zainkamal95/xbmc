@@ -281,6 +281,7 @@ int CDataCacheCore::GetAudioBitsPerSample()
 
 void CDataCacheCore::SetAudioLiveBitRate(double bitRate)
 {
+  
   std::unique_lock<CCriticalSection> lock(m_audioPlayerSection);
 
   m_playerAudioInfo.liveBitRate = bitRate;
@@ -288,6 +289,7 @@ void CDataCacheCore::SetAudioLiveBitRate(double bitRate)
 
 double CDataCacheCore::GetAudioLiveBitRate()
 {
+  
   std::unique_lock<CCriticalSection> lock(m_audioPlayerSection);
 
   return m_playerAudioInfo.liveBitRate;
