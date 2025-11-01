@@ -397,9 +397,9 @@ bool CPlayerGUIInfo::GetLabel(std::string& value, const CFileItem *item, int con
       return true;
     case PLAYER_PROCESS_VIDEO_LIVE_BIT_RATE:
       value = std::to_string(CServiceBroker::GetDataCacheCore().GetVideoLiveBitRate() / 1024 / 1024);
+      return true;
     case PLAYER_PROCESS_AUDIO_LIVE_BIT_RATE:
       value = std::to_string(CServiceBroker::GetDataCacheCore().GetAudioLiveBitRate() / 1024);
-      return true;
       return true;
     case PLAYER_PROCESS_AML_PIXELFORMAT:
       value = GetAMLConfigInfo("Colour depth") + ", " + GetAMLConfigInfo("Colourspace");
