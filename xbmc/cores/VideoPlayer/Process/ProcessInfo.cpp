@@ -433,6 +433,7 @@ int CProcessInfo::GetAudioBitsPerSample()
 
 void CProcessInfo::SetAudioLiveBitRate(double bitRate)
 {
+  
   std::unique_lock<CCriticalSection> lock(m_audioCodecSection);
 
   m_audioLiveBitRate = bitRate;
@@ -443,6 +444,7 @@ void CProcessInfo::SetAudioLiveBitRate(double bitRate)
 
 double CProcessInfo::GetAudioLiveBitRate()
 {
+  
   std::unique_lock<CCriticalSection> lock(m_audioCodecSection);
 
   return m_audioLiveBitRate;
