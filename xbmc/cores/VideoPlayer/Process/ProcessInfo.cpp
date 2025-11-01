@@ -74,6 +74,7 @@ void CProcessInfo::ResetVideoCodecInfo()
   m_videoHeight = 0;
   m_videoFPS = 0.0;
   m_videoDAR = 0.0;
+  m_videoLiveBitRate = 0;
   m_videoIsInterlaced = false;
   m_deintMethods.clear();
   m_deintMethods.push_back(EINTERLACEMETHOD::VS_INTERLACEMETHOD_NONE);
@@ -191,6 +192,7 @@ void CProcessInfo::GetVideoDimensions(int &width, int &height)
 
 void CProcessInfo::SetVideoLiveBitRate(double bitRate)
 {
+  
   std::unique_lock<CCriticalSection> lock(m_videoCodecSection);
 
   m_videoLiveBitRate= bitRate;
@@ -201,6 +203,7 @@ void CProcessInfo::SetVideoLiveBitRate(double bitRate)
 
 double CProcessInfo::GetVideoLiveBitRate()
 {
+  
   std::unique_lock<CCriticalSection> lock(m_videoCodecSection);
 
   return m_videoLiveBitRate;
